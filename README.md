@@ -50,22 +50,34 @@ Pull requests to the official skills are welcome too. These files are mirrored f
 - **`.agents/skills/`**: the official Flaim skills. They're the analyst playbook an AI follows for start/sit calls, waivers, trades, keepers, matchups and more.
 - **`tools/`**: a daily snapshot of the live tool descriptions (`tools.json`) and server instructions (`instructions.md`), taken straight from the server. Suggest changes to these with the issue form rather than a pull request, since they're rewritten every day.
 - **`community/`**: skills shared by other Flaim users.
-- **`.claude-plugin/`, `.codex-plugin/`, `.mcp.json` and `server.json`**: plugin packaging and MCP server details for developer tools.
+- **`.claude-plugin/`, `.codex-plugin/`, `.mcp.json` and `server.json`**: plugin packaging and MCP server details for Claude Code, Codex and other developer tools.
 
 The official files are copied here from Flaim's main codebase whenever they change, so this repo always matches what ships.
 
-### Claude Code plugin
+### Use Flaim in developer tools
 
-The plugin bundles the skills and the Flaim MCP server.
+Flaim is a standard remote MCP server, so it works in any tool that supports remote MCP servers with sign-in, such as Claude Code, Codex and Cursor. The server URL is:
+
+```
+https://api.flaim.app/mcp
+```
+
+The first time you use it, you'll sign in with your Flaim account in the browser. You'll need at least one league connected at [flaim.app](https://flaim.app).
+
+| Tool | Setup |
+|---|---|
+| Claude Code | `claude mcp add --transport http flaim https://api.flaim.app/mcp`, then run `/mcp` to sign in |
+| Codex | `codex mcp add flaim --url https://api.flaim.app/mcp` (run `codex mcp login flaim` if it doesn't prompt you to sign in) |
+| Cursor | Add `"flaim": { "url": "https://api.flaim.app/mcp" }` under `mcpServers` in `~/.cursor/mcp.json` |
+
+Claude Code users can also install the plugin, which adds the skills along with the server:
 
 ```bash
 claude plugin marketplace add jdguggs10/flaim-fantasy
 claude plugin install flaim-fantasy@flaim
 ```
 
-Then run `/mcp` in Claude Code and choose the Flaim server to sign in. You'll need a Flaim account with at least one league connected. If you only want the MCP server, run `claude mcp add --transport http flaim https://api.flaim.app/mcp`.
-
-### Skills in other tools
+### Use the skills
 
 Tools that support Agent Skills look for them in your project's `.agents/skills/` folder, or in `~/.agents/skills/` for every project:
 
