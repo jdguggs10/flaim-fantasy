@@ -14,7 +14,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: snapshot-tools
+  group: snapshot
   cancel-in-progress: false
 
 jobs:
@@ -22,11 +22,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
 
       - name: Fetch live tool definitions
         run: python3 scripts/snapshot_tools.py tools
 
+      # A mirror sync can land while this runs. It never touches tools/, so
+      # rebasing onto it is clean.
       - name: Commit if the wording changed
         run: |
           if [ -z "$(git status --porcelain -- tools)" ]; then
@@ -37,4 +41,13 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add tools
           git commit -m "Update tool snapshot"
-          git push
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push attempt ${attempt} was rejected; rebasing onto the new main."
+            git fetch origin main
+            git rebase origin/main
+          done
+          echo "Could not push after 3 attempts." >&2
+          exit 1

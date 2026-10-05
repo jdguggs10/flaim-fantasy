@@ -13,7 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
-      - name: JSON, plugin paths, skill frontmatter, symlinks, mirror state
+      - name: JSON, plugin paths, skill frontmatter, symlinks
         run: python3 scripts/validate.py .
+
+      # Pull requests that touch official paths are welcome (a maintainer
+      # ports them), so the mirror-state check only guards main itself.
+      - name: Mirror state matches the managed paths
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: python3 scripts/validate.py --check-mirror-state .

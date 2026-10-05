@@ -7,13 +7,17 @@
 3. Every SKILL.md under .agents/skills and community has frontmatter with a
    name (matching its folder) and a description.
 4. No symlinks anywhere.
-5. .mirror-state.json, if present, matches the hash of the managed paths.
+5. With --check-mirror-state: .mirror-state.json exists and matches the hash
+   of the managed paths. CI runs this on main only, so pull requests that
+   touch official paths still pass; a maintainer ports them.
 
-The managed-path hash is the SHA-256 of a sha256sum-style manifest: one
-"<sha256 hex>  <path>" line per file under the managed paths, sorted by path
-in byte order. The mirror job in Flaim's main codebase computes the same hash.
+The managed-path hash is the SHA-256 of a manifest with one
+"<mode> <sha256 hex>  <path>" line per file under the managed paths, sorted
+by path in byte order, where <mode> is 100755 for an executable file and
+100644 otherwise. The mirror job in Flaim's main codebase computes the same
+hash, and its managed-path list must match MANAGED_PATHS below.
 
-Usage: python3 scripts/validate.py [repo-root]   (default: .)
+Usage: python3 scripts/validate.py [--check-mirror-state] [repo-root]
 """
 
 import glob
@@ -21,6 +25,18 @@ import hashlib
 import json
 import os
 import sys
+
+# Mirrored from Flaim's main codebase. Hardcoded here, not read from the state
+# file, so an edited state file can't shrink what the hash covers.
+MANAGED_PATHS = [
+    ".agents/skills",
+    ".claude-plugin",
+    ".codex-plugin",
+    ".mcp.json",
+    "server.json",
+    "glama.json",
+    "gemini-extension.json",
+]
 
 errors = []
 
@@ -52,9 +68,11 @@ def managed_files(root, managed_paths):
 def managed_hash(root, managed_paths):
     manifest = ""
     for path in managed_files(root, managed_paths):
-        with open(os.path.join(root, path), "rb") as handle:
+        full = os.path.join(root, path)
+        with open(full, "rb") as handle:
             digest = hashlib.sha256(handle.read()).hexdigest()
-        manifest += f"{digest}  {path}\n"
+        mode = "100755" if os.access(full, os.X_OK) else "100644"
+        manifest += f"{mode} {digest}  {path}\n"
     return hashlib.sha256(manifest.encode("utf-8")).hexdigest()
 
 
@@ -144,18 +162,15 @@ def check_symlinks(root):
 
 def check_mirror_state(root, parsed):
     state_path = os.path.join(root, ".mirror-state.json")
-    if not os.path.exists(state_path):
+    if not os.path.isfile(state_path):
+        fail(".mirror-state.json is missing; the official paths have never been synced")
         return
     state = parsed.get(state_path)
-    if not isinstance(state, dict):
-        fail(".mirror-state.json: not a JSON object")
+    recorded = state.get("managed_hash") if isinstance(state, dict) else None
+    if not isinstance(recorded, str) or not recorded:
+        fail(".mirror-state.json: needs a managed_hash string")
         return
-    paths = state.get("managed_paths")
-    recorded = state.get("managed_hash")
-    if not isinstance(paths, list) or not isinstance(recorded, str):
-        fail(".mirror-state.json: needs managed_paths (list) and managed_hash (string)")
-        return
-    actual = managed_hash(root, paths)
+    actual = managed_hash(root, MANAGED_PATHS)
     if actual != recorded:
         fail(
             ".mirror-state.json: managed paths changed since the last sync "
@@ -165,12 +180,16 @@ def check_mirror_state(root, parsed):
 
 
 def main():
-    root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else ".")
+    args = sys.argv[1:]
+    check_state = "--check-mirror-state" in args
+    args = [arg for arg in args if arg != "--check-mirror-state"]
+    root = os.path.abspath(args[0] if args else ".")
     parsed = check_json(root)
     check_manifest_paths(root, parsed)
     check_skills(root)
     check_symlinks(root)
-    check_mirror_state(root, parsed)
+    if check_state:
+        check_mirror_state(root, parsed)
     if errors:
         for message in errors:
             print(f"error: {message}")

@@ -19,6 +19,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 import urllib.request
 
 ENDPOINT = os.environ.get("FLAIM_MCP_URL", "https://api.flaim.app/mcp")
@@ -104,6 +105,33 @@ def stabilize(value):
     return value
 
 
+def check_snapshot(tools, instructions, out_dir):
+    """Refuse to write a snapshot that looks broken."""
+    problems = []
+    if not instructions.strip():
+        problems.append("initialize returned no server instructions")
+    if not tools:
+        problems.append("tools/list returned no tools")
+    for index, tool in enumerate(tools):
+        for field in ("name", "description", "inputSchema"):
+            if not tool.get(field):
+                problems.append(f"tool #{index} ({tool.get('name', '?')}) has no {field}")
+
+    existing_path = os.path.join(out_dir, "tools.json")
+    if os.path.exists(existing_path):
+        with open(existing_path, encoding="utf-8") as handle:
+            previous = len(json.load(handle))
+        if len(tools) * 2 < previous:
+            problems.append(
+                f"tool count dropped from {previous} to {len(tools)}, more than half"
+            )
+
+    if problems:
+        for problem in problems:
+            print(f"error: {problem}", file=sys.stderr)
+        raise SystemExit("Snapshot not written.")
+
+
 def main():
     out_dir = sys.argv[1] if len(sys.argv) > 1 else "tools"
 
@@ -131,22 +159,27 @@ def main():
         if not cursor:
             break
 
-    if not tools:
-        raise RuntimeError("tools/list returned no tools; refusing to write an empty snapshot")
+    tools = stabilize(sorted(tools, key=lambda tool: tool.get("name", "")))
+    instructions = stabilize_dates(init_result.get("instructions") or "").rstrip("\n")
+    check_snapshot(tools, instructions, out_dir)
 
-    tools = stabilize(sorted(tools, key=lambda tool: tool["name"]))
-    instructions = stabilize_dates(init_result.get("instructions", "")).rstrip("\n")
-
+    # Write both files to a temp dir first, then move them into place, so a
+    # failure part way never leaves a half-written snapshot.
     os.makedirs(out_dir, exist_ok=True)
-    with open(os.path.join(out_dir, "tools.json"), "w", encoding="utf-8") as handle:
-        json.dump(tools, handle, indent=2, ensure_ascii=False)
-        handle.write("\n")
-    with open(os.path.join(out_dir, "instructions.md"), "w", encoding="utf-8") as handle:
-        handle.write(
-            "<!-- Generated daily from the live Flaim MCP server's initialize response. "
-            "Do not edit; suggest wording changes with an issue. -->\n\n"
-        )
-        handle.write(instructions + "\n")
+    with tempfile.TemporaryDirectory(dir=out_dir, prefix=".snapshot-") as staging:
+        staged_tools = os.path.join(staging, "tools.json")
+        staged_instructions = os.path.join(staging, "instructions.md")
+        with open(staged_tools, "w", encoding="utf-8") as handle:
+            json.dump(tools, handle, indent=2, ensure_ascii=False)
+            handle.write("\n")
+        with open(staged_instructions, "w", encoding="utf-8") as handle:
+            handle.write(
+                "<!-- Generated daily from the live Flaim MCP server's initialize response. "
+                "Do not edit; suggest wording changes with an issue. -->\n\n"
+            )
+            handle.write(instructions + "\n")
+        os.replace(staged_tools, os.path.join(out_dir, "tools.json"))
+        os.replace(staged_instructions, os.path.join(out_dir, "instructions.md"))
 
     print(f"Wrote {len(tools)} tools and {len(instructions)} characters of instructions to {out_dir}/")
 
