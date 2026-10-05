@@ -1,0 +1,46 @@
+name: Tool or skill wording suggestion
+description: Suggest a change to a tool description, the server instructions, or a shipped skill.
+labels: ["wording"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The AI reads this text to decide which tool to call and how to use what comes back, so small wording changes matter. The current text is in [`tools/`](https://github.com/jdguggs10/flaim-fantasy/tree/main/tools) and [`.agents/skills/`](https://github.com/jdguggs10/flaim-fantasy/tree/main/.agents/skills). Please leave personal details out of examples.
+  - type: dropdown
+    id: target
+    attributes:
+      label: What would you change?
+      options:
+        - A tool description or parameter description
+        - The server instructions
+        - The flaim-fantasy skill
+        - The activity-brief skill
+        - The analyze-matchup skill
+        - Something else
+    validations:
+      required: true
+  - type: input
+    id: tool
+    attributes:
+      label: Tool name, if it's a tool
+      placeholder: get_free_agents
+  - type: textarea
+    id: current
+    attributes:
+      label: Current wording
+      description: Quote the part you'd change.
+      render: text
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested wording
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why?
+      description: What did the AI get wrong, or what would this make better? An example prompt and answer helps a lot.
+    validations:
+      required: true

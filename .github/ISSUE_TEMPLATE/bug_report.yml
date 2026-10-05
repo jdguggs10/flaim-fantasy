@@ -1,0 +1,60 @@
+name: Bug report
+description: Something in Flaim didn't work the way it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Issues here are public, so please leave out your email, league names, team names and anything else personal. For a problem with your own account, email support@flaim.app instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you ask, and what went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: dropdown
+    id: app
+    attributes:
+      label: Which AI app were you using?
+      options:
+        - ChatGPT
+        - Claude (web, desktop or mobile)
+        - Claude Code
+        - Codex
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which fantasy platform?
+      options:
+        - ESPN
+        - Yahoo
+        - Sleeper
+        - More than one
+        - Not league-specific
+    validations:
+      required: true
+  - type: dropdown
+    id: sport
+    attributes:
+      label: Which sport?
+      options:
+        - Football
+        - Baseball
+        - Basketball
+        - Hockey
+        - Not sport-specific
+  - type: input
+    id: when
+    attributes:
+      label: Roughly when did it happen?
+      description: A date and time, with your time zone, helps us find it.

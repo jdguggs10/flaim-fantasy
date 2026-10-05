@@ -1,0 +1,40 @@
+name: Snapshot tools
+
+# Refreshes tools/ from the live Flaim MCP server: tools/list and the server
+# instructions from initialize. Runs daily as drift detection, and on demand.
+# No secret is needed; the endpoint answers these calls without sign-in.
+on:
+  schedule:
+    - cron: '17 11 * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [flaim-deployed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: snapshot-tools
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Fetch live tool definitions
+        run: python3 scripts/snapshot_tools.py tools
+
+      - name: Commit if the wording changed
+        run: |
+          if [ -z "$(git status --porcelain -- tools)" ]; then
+            echo "No change in tools/."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools
+          git commit -m "Update tool snapshot"
+          git push

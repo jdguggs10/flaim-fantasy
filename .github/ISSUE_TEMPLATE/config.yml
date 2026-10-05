@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Account help
+    url: mailto:support@flaim.app
+    about: For problems with your own Flaim account, email support@flaim.app rather than opening a public issue.
+  - name: Connect or manage leagues
+    url: https://flaim.app/leagues
+    about: Connect ESPN, Yahoo or Sleeper leagues and manage your defaults.

@@ -1,0 +1,35 @@
+name: Skill idea
+description: Suggest a new skill that would work well with Flaim.
+labels: ["skill-idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Skills teach an AI how to handle a kind of request, like a weekly league report or a trade deadline checklist. Flaim is read-only, so skills can analyze leagues but can't change them.
+  - type: textarea
+    id: what
+    attributes:
+      label: What should the skill do?
+    validations:
+      required: true
+  - type: textarea
+    id: prompts
+    attributes:
+      label: Example requests
+      description: A few things you'd type that should trigger it.
+      placeholder: |
+        Give me a recap of last week in my league.
+        Who won the week's trades?
+    validations:
+      required: true
+  - type: dropdown
+    id: build
+    attributes:
+      label: Would you like to build it?
+      description: Community skills go in the community/ folder. See CONTRIBUTING.md.
+      options:
+        - Yes, I'll open a pull request
+        - Maybe, with some help
+        - No, just sharing the idea
+    validations:
+      required: true
