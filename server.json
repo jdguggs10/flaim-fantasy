@@ -3,7 +3,7 @@
   "name": "app.flaim/mcp",
   "title": "Flaim Fantasy",
   "description": "Fantasy analysis for your ESPN, Yahoo, and Sleeper leagues. Reads your leagues, never changes them.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "websiteUrl": "https://flaim.app",
   "repository": {
     "url": "https://github.com/jdguggs10/flaim-fantasy",
