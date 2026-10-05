@@ -11,6 +11,9 @@ The server stamps the current date into some descriptions. Those dates are
 replaced with a fixed placeholder so the snapshot only changes when the
 wording does.
 
+Refuses to write if the instructions are empty, a tool is incomplete, or the
+tool count goes down. Set ALLOW_TOOL_REMOVAL=true when a removal is real.
+
 Usage: python3 scripts/snapshot_tools.py [output-dir]   (default: tools)
 """
 
@@ -121,9 +124,12 @@ def check_snapshot(tools, instructions, out_dir):
     if os.path.exists(existing_path):
         with open(existing_path, encoding="utf-8") as handle:
             previous = len(json.load(handle))
-        if len(tools) * 2 < previous:
+        allow_removal = os.environ.get("ALLOW_TOOL_REMOVAL", "").lower() == "true"
+        if len(tools) < previous and not allow_removal:
             problems.append(
-                f"tool count dropped from {previous} to {len(tools)}, more than half"
+                f"tool count dropped from {previous} to {len(tools)}; if a tool was "
+                "really removed, rerun with ALLOW_TOOL_REMOVAL=true (the "
+                "allow_tool_removal input on a manual run)"
             )
 
     if problems:

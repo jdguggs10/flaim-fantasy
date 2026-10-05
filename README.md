@@ -2,7 +2,7 @@
 
 Flaim Fantasy connects your ESPN, Yahoo and Sleeper fantasy leagues to ChatGPT and Claude, so you can ask about your actual team. "Who should I start this week?" "Is this trade fair?" "What's on the waiver wire?" The AI answers with your real league in front of it.
 
-Flaim is read-only. It can look at your leagues, but it can't set lineups, add or drop players, make trades or change settings. It's free, and it's an independent project.
+Flaim is read-only. It can look at your leagues, but it can't set lineups, add or drop players, make trades or change settings. It's free, and it isn't affiliated with ESPN, Yahoo or Sleeper.
 
 <p align="center">
   <img src="media/connected-leagues-widget-2026.png" width="360" alt="Flaim showing connected ESPN, Yahoo, and Sleeper fantasy football leagues in ChatGPT.">
@@ -52,7 +52,7 @@ Pull requests to the official skills are welcome too. These files are mirrored f
 - **`community/`**: skills shared by other Flaim users.
 - **`.claude-plugin/`, `.codex-plugin/`, `.mcp.json` and `server.json`**: plugin packaging and MCP server details for Claude Code, Codex and other developer tools.
 
-The official files are copied here from Flaim's main codebase whenever they change, so this repo always matches what ships.
+The official files are copied here from Flaim's main codebase whenever they change, so this repo matches Flaim's main branch.
 
 ### Use Flaim in developer tools
 

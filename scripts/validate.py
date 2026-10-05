@@ -15,7 +15,8 @@ The managed-path hash is the SHA-256 of a manifest with one
 "<mode> <sha256 hex>  <path>" line per file under the managed paths, sorted
 by path in byte order, where <mode> is 100755 for an executable file and
 100644 otherwise. The mirror job in Flaim's main codebase computes the same
-hash, and its managed-path list must match MANAGED_PATHS below.
+hash. This check only covers the public side; the mirror job also checks the
+content against the main codebase at the last synced commit.
 
 Usage: python3 scripts/validate.py [--check-mirror-state] [repo-root]
 """
@@ -28,6 +29,7 @@ import sys
 
 # Mirrored from Flaim's main codebase. Hardcoded here, not read from the state
 # file, so an edited state file can't shrink what the hash covers.
+# Must match MANAGED_PATHS in Flaim's scripts/mirror-public.sh exactly.
 MANAGED_PATHS = [
     ".agents/skills",
     ".claude-plugin",
@@ -35,7 +37,6 @@ MANAGED_PATHS = [
     ".mcp.json",
     "server.json",
     "glama.json",
-    "gemini-extension.json",
 ]
 
 errors = []

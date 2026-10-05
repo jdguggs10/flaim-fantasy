@@ -7,8 +7,11 @@ on:
   schedule:
     - cron: '17 11 * * *'
   workflow_dispatch:
-  repository_dispatch:
-    types: [flaim-deployed]
+    inputs:
+      allow_tool_removal:
+        description: Accept a lower tool count (a tool was really removed)
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -27,6 +30,8 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch live tool definitions
+        env:
+          ALLOW_TOOL_REMOVAL: ${{ inputs.allow_tool_removal && 'true' || 'false' }}
         run: python3 scripts/snapshot_tools.py tools
 
       # A mirror sync can land while this runs. It never touches tools/, so

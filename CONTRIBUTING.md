@@ -14,6 +14,8 @@ The mirrored paths are:
 
 An issue with the **Tool or skill wording suggestion** form works just as well as a pull request.
 
+Please don't commit to these paths directly, even as a maintainer. The sync checks that they still match the main codebase at the last synced commit, and stops if they don't. To recover, port the change into the main codebase (or revert it here). Once the main codebase matches what's here, the next sync picks up again on its own.
+
 Wording changes to the shipped skills can take a while to go live. The ChatGPT app ships skill text as part of a reviewed app version, so an accepted change may wait for the next version to be submitted and approved.
 
 `tools/` is written by a daily job from the live server. Please don't edit it; suggest wording changes with an issue instead.
