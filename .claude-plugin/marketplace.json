@@ -1,0 +1,15 @@
+{
+  "name": "flaim",
+  "owner": {
+    "name": "Flaim"
+  },
+  "description": "Flaim's fantasy sports plugin for Claude Code.",
+  "plugins": [
+    {
+      "name": "flaim-fantasy",
+      "source": "./",
+      "description": "Fantasy sports analysis for your ESPN, Yahoo, and Sleeper leagues.",
+      "category": "productivity"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "name": "flaim-fantasy",
+  "version": "2.0.0",
+  "description": "Fantasy sports analysis for ESPN, Yahoo, and Sleeper. Ten read-only league-data tools plus refresh_leagues, a bounded write that updates only Flaim's own connected-league registry and never changes anything on the fantasy platforms.",
+  "author": {
+    "name": "Flaim"
+  },
+  "homepage": "https://flaim.app",
+  "repository": "https://github.com/jdguggs10/flaim-fantasy",
+  "license": "MIT",
+  "keywords": [
+    "fantasy-sports",
+    "espn",
+    "yahoo",
+    "sleeper"
+  ],
+  "skills": "./.agents/skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Flaim Fantasy",
+    "shortDescription": "Fantasy analysis for ESPN, Yahoo, and Sleeper leagues.",
+    "longDescription": "Use Flaim's fantasy-analysis skills and MCP server to review rosters, matchups, standings, transactions, and waiver options across your real leagues. Ten tools are read-only; refresh_leagues can update Flaim's own connected-league list and never changes anything on ESPN, Yahoo, or Sleeper.",
+    "developerName": "Flaim",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://flaim.app",
+    "privacyPolicyURL": "https://flaim.app/privacy",
+    "termsOfServiceURL": "https://flaim.app/terms",
+    "defaultPrompt": [
+      "Review my fantasy roster and suggest my best starters.",
+      "Analyze my matchup and flag my biggest strengths and risks.",
+      "Find the best waiver targets in my league right now."
+    ]
+  }
+}
