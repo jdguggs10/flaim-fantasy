@@ -1,5 +1,5 @@
 {
-  "source_commit": "bc27530925f841c78e7e9b4e63144349e294cfd7",
+  "source_commit": "bdc6ad4badf4f01716c0d9950bd4ed46734a5e0b",
   "managed_hash": "c7606fdf8fe3215ed09a3fb73c9e948eaf5ebc46016bfde409dd6865bbd21a2a",
   "managed_paths": [
     ".agents/skills",
@@ -7,7 +7,6 @@
     ".codex-plugin",
     ".mcp.json",
     "server.json",
-    "glama.json",
-    "gemini-extension.json"
+    "glama.json"
   ]
 }
