@@ -2,13 +2,17 @@
 
 Skills shared by Flaim users. They work alongside the Flaim MCP server, but they aren't part of the official plugin and Flaim doesn't maintain them. Read a skill before you install it.
 
+## Start from the example
+
+[`weekly-league-recap`](weekly-league-recap/SKILL.md) is a complete, working community skill. Copy its folder, rename it, and change the instructions. It shows the parts every skill needs: the frontmatter, picking the user's league the same way the official skills do, and which Flaim tools to call.
+
 ## Layout
 
 One folder per skill, named after the skill:
 
 ```
 community/
-  weekly-league-report/
+  weekly-league-recap/
     SKILL.md
     (any supporting files the skill needs)
 ```
@@ -17,20 +21,8 @@ community/
 
 Start `SKILL.md` with YAML frontmatter, the same way the official skills in `.agents/skills/` do:
 
-```markdown
----
-name: weekly-league-report
-description: Write a weekly recap of the user's Flaim-connected fantasy league, with standings movement, the week's best and worst lineups, and notable transactions. Use when the user asks for a weekly report or invokes /weekly-league-report.
-license: MIT
----
-
-# Weekly League Report
-
-Instructions for the AI go here.
-```
-
 - **`name`** (required): lowercase words joined by hyphens. It must match the folder name.
-- **`description`** (required): what the skill does and when to use it. The AI reads this to decide when to load the skill, so be specific about the requests it covers and the ones it doesn't.
+- **`description`** (required): what the skill does and when to use it. The AI reads this to decide when to load the skill, so be specific about the requests it covers.
 - **`argument-hint`** (optional): a short hint for slash-command arguments, like `"[days-back, default 2]"`.
 - **`license`** (optional): `MIT` is the default for this repo.
 
