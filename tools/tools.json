@@ -905,6 +905,16 @@
             "scoringType": {
               "type": "string"
             },
+            "scoringFormat": {
+              "type": "string",
+              "enum": [
+                "points",
+                "categories",
+                "roto",
+                "unknown"
+              ],
+              "description": "Yahoo: sport-aware reading of scoringType. Yahoo's raw \"head\" means points in football and categories in other sports"
+            },
             "currentWeek": {
               "type": [
                 "number",
@@ -1001,7 +1011,7 @@
   {
     "name": "get_matchups",
     "title": "League Matchups",
-    "description": "Get matchups/scoreboard for a specific week or the current week. Yahoo category leagues, and ESPN Each Category leagues in baseball, basketball, and hockey, return per-category rows and a categoryScore of wins/losses/ties per side. On those leagues the side total is a category count or null rather than fantasy points. ESPN category rows include only the stats that league scores. ESPN football and Sleeper stay on fantasy points and do not return category rows. A null categoryScore, value, or result means the provider did not report it; never infer one. Sleeper keeps every provider matchup record: scheduleShape reports \"no_h2h_pairings\" with reason \"unknown\" when numeric groups are present but none form an H2H pair, and \"unpublished_or_unavailable\" when there are no usable pairing IDs. When it has both pairs and unpaired records, it reports the unpaired count. A singleton has away:null and is never labelled a bye or used to infer league format. To request compact player scores for one selected matchup, use detail: \"players\" with an explicit week and team_id; this is currently ESPN football only and only for season_year 2018 or later. Any other platform, sport, or earlier season returns MATCHUP_DETAIL_UNSUPPORTED. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so the model already knows the league's team names, owner/team mapping, and league context before interpreting the matchup. For multi-league comparisons, call once per league. Read-only. Current date is YYYY-MM-DD.",
+    "description": "Get matchups/scoreboard for a specific week or the current week. Yahoo category leagues, and ESPN Each Category leagues in baseball, basketball, and hockey, return per-category rows and a categoryScore of wins/losses/ties per side. On those leagues the side total is a category count or null rather than fantasy points. ESPN category rows include only the stats that league scores. ESPN football and Sleeper stay on fantasy points and do not return category rows. A null categoryScore, value, or result means the provider did not report it; never infer one. Yahoo matchups: projectedPoints is the sum of each starter's pregame projection for the period. It does not add points as they are scored, so mid-period it routinely differs from points and can sit below the current score; that gap is expected and does not mean the data is stale or inconsistent. When liveProjectedPoints is present it is Yahoo's live projected final; prefer it. winProbability, when present, is Yahoo's estimated chance (0 to 1) that side wins. status reports upcoming, in_progress, or final; Yahoo's winner is official only when status is final. A missing optional field means Yahoo did not provide a usable value; never infer one. Sleeper returns no projection. Sleeper keeps every provider matchup record: scheduleShape reports \"no_h2h_pairings\" with reason \"unknown\" when numeric groups are present but none form an H2H pair, and \"unpublished_or_unavailable\" when there are no usable pairing IDs. When it has both pairs and unpaired records, it reports the unpaired count. A singleton has away:null and is never labelled a bye or used to infer league format. To request compact player scores for one selected matchup, use detail: \"players\" with an explicit week and team_id; this is currently ESPN football only and only for season_year 2018 or later. Any other platform, sport, or earlier season returns MATCHUP_DETAIL_UNSUPPORTED. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so the model already knows the league's team names, owner/team mapping, and league context before interpreting the matchup. For multi-league comparisons, call once per league. Read-only. Current date is YYYY-MM-DD.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1178,6 +1188,22 @@
                               ],
                               "additionalProperties": true
                             }
+                          },
+                          "projectedPoints": {
+                            "type": "number",
+                            "description": "Yahoo: sum of the starters' pregame projections for the period; it does not add points as they are scored, so a gap from points mid-period is expected, not stale data"
+                          },
+                          "liveProjectedPoints": {
+                            "type": "number",
+                            "description": "Yahoo, when sent: live projected final for the period; prefer it over projectedPoints"
+                          },
+                          "winProbability": {
+                            "type": "number",
+                            "description": "Yahoo, when sent: estimated chance (0-1) that this side wins"
+                          },
+                          "gamesRemaining": {
+                            "type": "number",
+                            "description": "Yahoo, when sent: games this side has left in the period"
                           }
                         },
                         "additionalProperties": true
@@ -1196,6 +1222,22 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "upcoming",
+                      "in_progress",
+                      "final"
+                    ],
+                    "description": "Yahoo: matchup state; absent when Yahoo did not report a recognized one"
+                  },
+                  "winner": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Yahoo and Sleeper: home, away, or tie, set from current points mid-period; Yahoo's winner is official only when status is final. ESPN: its own HOME, AWAY, TIE, or UNDECIDED, which stays UNDECIDED until the matchup is decided"
                   }
                 },
                 "additionalProperties": true
