@@ -1,6 +1,6 @@
 {
-  "source_commit": "a5ccd8048cf684eb4ceff5350ebd8374883eced6",
-  "managed_hash": "a4aaf8a231f2090656f27057cfdd9810cbb21ce6bc09e91e7d1b29474d22fa30",
+  "source_commit": "9a93c11f19f53515883ef824d5bd0b4cd86e7de7",
+  "managed_hash": "ea60b1e6bd5c252a2472a19d3b3fb74f02e83af5604e4c18e7af13a3c7d35582",
   "managed_paths": [
     ".agents/skills",
     ".claude-plugin",

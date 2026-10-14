@@ -1,16 +1,29 @@
 {
   "name": "flaim-fantasy",
-  "version": "1.1.0",
-  "description": "Fantasy sports analysis across ESPN, Yahoo, and Sleeper. Get roster advice, standings, matchups, waiver wire picks, and start/sit decisions for football, baseball, basketball, and hockey.",
+  "displayName": "Flaim Fantasy",
+  "version": "1.2.0",
+  "description": "Fantasy sports analysis across ESPN, Yahoo, and Sleeper. Get roster advice, standings, matchups, waiver wire picks, and start/sit decisions for football, baseball, basketball, and hockey. Flaim only reads your leagues. This application uses fantasy data provided by Yahoo Fantasy.",
   "skills": [
     "./.agents/skills/flaim-fantasy/",
     "./.agents/skills/activity-brief/",
     "./.agents/skills/analyze-matchup/"
   ],
   "author": {
-    "name": "Flaim"
+    "name": "Flaim",
+    "url": "https://flaim.app"
   },
   "homepage": "https://flaim.app",
   "repository": "https://github.com/jdguggs10/flaim-fantasy",
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "fantasy-sports",
+    "espn",
+    "yahoo",
+    "sleeper"
+  ],
+  "icon": "./.claude-plugin/icon.png",
+  "documentationUrl": "https://flaim.app/docs",
+  "supportUrl": "https://flaim.app/support",
+  "privacyPolicyUrl": "https://flaim.app/privacy",
+  "termsOfServiceUrl": "https://flaim.app/terms"
 }
