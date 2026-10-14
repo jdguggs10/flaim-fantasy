@@ -2,7 +2,9 @@
 
 Flaim Fantasy connects your ESPN, Yahoo and Sleeper fantasy leagues to ChatGPT and Claude, so you can ask about your actual team. "Who should I start this week?" "Is this trade fair?" "What's on the waiver wire?" The AI answers with your real league in front of it.
 
-Flaim is read-only. It can look at your leagues, but it can't set lineups, add or drop players, make trades or change settings. It's free, and it isn't affiliated with ESPN, Yahoo or Sleeper.
+Flaim reads your leagues but never changes them. It can't set lineups, add or drop players, make trades or change settings. It's free, and it isn't affiliated with ESPN, Yahoo or Sleeper.
+
+This application uses fantasy data provided by Yahoo Fantasy.
 
 <p align="center">
   <img src="media/connected-leagues-widget-2026.png" width="360" alt="Flaim showing connected ESPN, Yahoo, and Sleeper fantasy football leagues in ChatGPT.">
