@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. This is the only agent
 
 ## What this repo is
 
-The public home of Flaim Fantasy's skills, plugin packaging, a daily snapshot of the live tool descriptions, and skills shared by the community. Flaim is read-only: it can look at fantasy leagues but can't set lineups, add or drop players, make trades or change settings. See `README.md`.
+The public home of Flaim Fantasy's skills, plugin packaging, a daily snapshot of the live tool descriptions, and skills shared by the community. Flaim reads fantasy leagues but never changes them: it can't set lineups, add or drop players, make trades or change settings. See `README.md`.
 
 ## Official paths are mirrored: don't edit them here
 
