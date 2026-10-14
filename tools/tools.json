@@ -2092,7 +2092,8 @@
               "properties": {
                 "structured_details_incomplete": {
                   "type": "boolean",
-                  "const": true
+                  "const": true,
+                  "description": "ESPN only: some returned rows lack detail ESPN normally provides. Rows marked trade_details_unavailable lack their complete player exchange (or, for a proposal, its sender); the activity-feed fallback also lacks failed bids, FAAB amounts, and the trade lifecycle."
                 },
                 "omitted_unscoped_rows": {
                   "type": "number"
@@ -2163,7 +2164,8 @@
                         "string",
                         "number"
                       ]
-                    }
+                    },
+                    "description": "Teams involved in the row. Do not infer which team acted or proposed a trade from their order."
                   },
                   "players_added": {
                     "type": "array",
@@ -2279,6 +2281,15 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "proposed_by_team_id": {
+                    "type": "string",
+                    "description": "ESPN trade_proposal rows only: the team ID that sent the proposal. Present only when trade_sides are complete, and then always one of the row's team_ids. When this field is present and trade_details_unavailable is absent, a team sent the proposal if this matches its ID, is a recipient if it is in team_ids but does not match (trade_sides shows who receives which players), and is not involved if it is not in team_ids. When trade_details_unavailable is set, team_ids may be missing the other party, so a team's absence from team_ids does not mean the proposal is between other teams, and the direction is unknown."
+                  },
+                  "trade_details_unavailable": {
+                    "type": "boolean",
+                    "const": true,
+                    "description": "ESPN trade, proposal, decline, veto, and uphold rows only: the complete player exchange, and for a proposal its sender, could not be determined from ESPN's data. The row is real, but its trade cannot be described in full; any players_added or players_dropped entries may be partial and are not the whole trade."
                   },
                   "faab_bid": {
                     "type": [
