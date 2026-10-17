@@ -716,6 +716,21 @@
                       }
                     ],
                     "description": "Legacy epoch-ms form of waiverClearsAt"
+                  },
+                  "injuryStatus": {
+                    "type": "string",
+                    "description": "Current injury designation where the platform reports one. ESPN sends mapped words (e.g. Questionable, Out, IR) and may send Active for a healthy player. Sleeper sends its own code verbatim (e.g. Questionable, Doubtful, Out, IR, PUP, Sus, GTD, DTD) and omits the field when the player has no designation. Translate codes into plain language. Yahoo reports its designation in status instead. Present-day only; it can lag breaking news"
+                  },
+                  "injuryBodyPart": {
+                    "type": "string",
+                    "description": "Sleeper only: the injured body part (e.g. Knee), present only alongside injuryStatus"
+                  },
+                  "eligiblePositions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Positions the player is eligible at. ESPN: lineup-slot labels, which can include flex labels such as UTIL, and an empty array when ESPN lists no usable slot. Sleeper: its fantasy positions, such as [\"RB\", \"WR\"], omitted when Sleeper sends none"
                   }
                 },
                 "additionalProperties": true
@@ -1011,7 +1026,7 @@
   {
     "name": "get_matchups",
     "title": "League Matchups",
-    "description": "Get matchups/scoreboard for a specific week or the current week. Yahoo category leagues, and ESPN Each Category leagues in baseball, basketball, and hockey, return per-category rows and a categoryScore of wins/losses/ties per side. On those leagues the side total is a category count or null rather than fantasy points. ESPN category rows include only the stats that league scores. ESPN football and Sleeper stay on fantasy points and do not return category rows. A null categoryScore, value, or result means the provider did not report it; never infer one. Yahoo matchups: projectedPoints is the sum of each starter's pregame projection for the period. It does not add points as they are scored, so mid-period it routinely differs from points and can sit below the current score; that gap is expected and does not mean the data is stale or inconsistent. When liveProjectedPoints is present it is Yahoo's live projected final; prefer it. winProbability, when present, is Yahoo's estimated chance (0 to 1) that side wins. status reports upcoming, in_progress, or final; Yahoo's winner is official only when status is final. A missing optional field means Yahoo did not provide a usable value; never infer one. Sleeper returns no projection. Sleeper keeps every provider matchup record: scheduleShape reports \"no_h2h_pairings\" with reason \"unknown\" when numeric groups are present but none form an H2H pair, and \"unpublished_or_unavailable\" when there are no usable pairing IDs. When it has both pairs and unpaired records, it reports the unpaired count. A singleton has away:null and is never labelled a bye or used to infer league format. To request compact player scores for one selected matchup, use detail: \"players\" with an explicit week and team_id; this is currently ESPN football only and only for season_year 2018 or later. Any other platform, sport, or earlier season returns MATCHUP_DETAIL_UNSUPPORTED. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so the model already knows the league's team names, owner/team mapping, and league context before interpreting the matchup. For multi-league comparisons, call once per league. Read-only. Current date is YYYY-MM-DD.",
+    "description": "Get matchups/scoreboard for a specific week or the current week. Yahoo category leagues, and ESPN Each Category leagues in baseball, basketball, and hockey, return per-category rows and a categoryScore of wins/losses/ties per side. On those leagues the side total is a category count or null rather than fantasy points. ESPN category rows include only the stats that league scores. ESPN football and Sleeper stay on fantasy points and do not return category rows. A null categoryScore, value, or result means the provider did not report it; never infer one. ESPN points matchups: totalPoints stays 0 until ESPN decides the matchup, so read each side's currentPoints for the score so far; winner stays UNDECIDED until then. Yahoo matchups: projectedPoints is the sum of each starter's pregame projection for the period. It does not add points as they are scored, so mid-period it routinely differs from points and can sit below the current score; that gap is expected and does not mean the data is stale or inconsistent. When liveProjectedPoints is present it is Yahoo's live projected final; prefer it. winProbability, when present, is Yahoo's estimated chance (0 to 1) that side wins. status reports upcoming, in_progress, or final; Yahoo's winner is official only when status is final. A missing optional field means Yahoo did not provide a usable value; never infer one. Sleeper returns no projection. Sleeper status reports upcoming, in_progress, or final for the requested week; in_progress lasts from before kickoff until Sleeper rolls to the next week, so it does not prove games have started. Sleeper's winner appears only when status is final; mid-week, points are the live score, not a result. Sleeper keeps every provider matchup record: scheduleShape reports \"no_h2h_pairings\" with reason \"unknown\" when numeric groups are present but none form an H2H pair, and \"unpublished_or_unavailable\" when there are no usable pairing IDs. When it has both pairs and unpaired records, it reports the unpaired count. A singleton has away:null and is never labelled a bye or used to infer league format. To request compact player scores for one selected matchup, use detail: \"players\" with an explicit week and team_id; this is currently ESPN football only and only for season_year 2018 or later. Any other platform, sport, or earlier season returns MATCHUP_DETAIL_UNSUPPORTED. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so the model already knows the league's team names, owner/team mapping, and league context before interpreting the matchup. For multi-league comparisons, call once per league. Read-only. Current date is YYYY-MM-DD.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1189,6 +1204,13 @@
                               "additionalProperties": true
                             }
                           },
+                          "currentPoints": {
+                            "type": [
+                              "number",
+                              "null"
+                            ],
+                            "description": "ESPN points matchups: the score so far. ESPN's totalPoints stays 0 until the matchup is decided, so read this instead; it equals totalPoints once decided. Null on ESPN category leagues"
+                          },
                           "projectedPoints": {
                             "type": "number",
                             "description": "Yahoo: sum of the starters' pregame projections for the period; it does not add points as they are scored, so a gap from points mid-period is expected, not stale data"
@@ -1230,14 +1252,14 @@
                       "in_progress",
                       "final"
                     ],
-                    "description": "Yahoo: matchup state; absent when Yahoo did not report a recognized one"
+                    "description": "Yahoo: matchup state; absent when Yahoo did not report a recognized one. Sleeper: state of the requested week; absent when it could not be determined from Sleeper's league and season state. Sleeper's in_progress covers its whole current week, from before kickoff until Sleeper rolls to the next week"
                   },
                   "winner": {
                     "type": [
                       "string",
                       "null"
                     ],
-                    "description": "Yahoo and Sleeper: home, away, or tie, set from current points mid-period; Yahoo's winner is official only when status is final. ESPN: its own HOME, AWAY, TIE, or UNDECIDED, which stays UNDECIDED until the matchup is decided"
+                    "description": "Yahoo: home, away, or tie, set from current points mid-period and official only when status is final. Sleeper: home, away, or tie, present only when status is final. ESPN: its own HOME, AWAY, TIE, or UNDECIDED, which stays UNDECIDED until the matchup is decided"
                   }
                 },
                 "additionalProperties": true
@@ -1472,6 +1494,21 @@
                       "null"
                     ],
                     "description": "ESPN football only: ESPN-computed actual-season points per game under the selected league scoring; null under the same conditions as seasonPoints"
+                  },
+                  "injuryStatus": {
+                    "type": "string",
+                    "description": "Sleeper only: current injury designation, Sleeper's own code verbatim (e.g. Questionable, Doubtful, Out, IR, PUP, Sus, GTD, DTD), absent when the player has none; translate codes into plain language. Present-day only; it can lag breaking news"
+                  },
+                  "injuryBodyPart": {
+                    "type": "string",
+                    "description": "Sleeper only: the injured body part (e.g. Knee), present only alongside injuryStatus"
+                  },
+                  "eligiblePositions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Sleeper only: the player's fantasy-eligible positions, such as [\"RB\", \"WR\"]; absent when Sleeper sends none"
                   }
                 },
                 "additionalProperties": true
