@@ -1026,7 +1026,7 @@
   {
     "name": "get_matchups",
     "title": "League Matchups",
-    "description": "Get matchups/scoreboard for a specific week or the current week. Yahoo category leagues, and ESPN Each Category leagues in baseball, basketball, and hockey, return per-category rows and a categoryScore of wins/losses/ties per side. On those leagues the side total is a category count or null rather than fantasy points. ESPN category rows include only the stats that league scores. ESPN football and Sleeper stay on fantasy points and do not return category rows. A null categoryScore, value, or result means the provider did not report it; never infer one. ESPN points matchups: totalPoints stays 0 until ESPN decides the matchup, so read each side's currentPoints for the score so far; winner stays UNDECIDED until then. Yahoo matchups: projectedPoints is the sum of each starter's pregame projection for the period. It does not add points as they are scored, so mid-period it routinely differs from points and can sit below the current score; that gap is expected and does not mean the data is stale or inconsistent. When liveProjectedPoints is present it is Yahoo's live projected final; prefer it. winProbability, when present, is Yahoo's estimated chance (0 to 1) that side wins. status reports upcoming, in_progress, or final; Yahoo's winner appears only when status is final. A missing optional field means Yahoo did not provide a usable value; never infer one. Sleeper returns no projection. Sleeper status reports upcoming, in_progress, or final for the requested week; in_progress lasts from before kickoff until Sleeper rolls to the next week, so it does not prove games have started. Sleeper's winner appears only when status is final; mid-week, points are the live score, not a result. Sleeper keeps every provider matchup record: scheduleShape reports \"no_h2h_pairings\" with reason \"unknown\" when numeric groups are present but none form an H2H pair, and \"unpublished_or_unavailable\" when there are no usable pairing IDs. When it has both pairs and unpaired records, it reports the unpaired count. A singleton has away:null and is never labelled a bye or used to infer league format. To request compact player scores for one selected matchup, use detail: \"players\" with an explicit week and team_id; this is currently ESPN football only and only for season_year 2018 or later. Any other platform, sport, or earlier season returns MATCHUP_DETAIL_UNSUPPORTED. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so the model already knows the league's team names, owner/team mapping, and league context before interpreting the matchup. For multi-league comparisons, call once per league. Read-only. Current date is YYYY-MM-DD.",
+    "description": "Get matchups/scoreboard for a specific week or the current week. Yahoo head-to-head category leagues (Each Category and Most Categories) and ESPN Each Category leagues, in baseball, basketball, and hockey, return per-category rows and a categoryScore of wins/losses/ties per side. On those leagues the side total is a category count or null rather than fantasy points. In a Yahoo Most Categories league (scoringTypeRaw \"headone\"), the week counts as a single win, loss, or tie: the side that wins more categories takes it, and equal category wins is a tie. ESPN category rows include only the stats that league scores. ESPN football and Sleeper stay on fantasy points and do not return category rows. A null categoryScore, value, or result means the provider did not report it; never infer one. ESPN points matchups: totalPoints stays 0 until ESPN decides the matchup, so read each side's currentPoints for the score so far; winner stays UNDECIDED until then. Yahoo matchups: projectedPoints is the sum of each starter's pregame projection for the period. It does not add points as they are scored, so mid-period it routinely differs from points and can sit below the current score; that gap is expected and does not mean the data is stale or inconsistent. When liveProjectedPoints is present it is Yahoo's live projected final; prefer it. winProbability, when present, is Yahoo's estimated chance (0 to 1) that side wins. status reports upcoming, in_progress, or final; Yahoo's winner appears only when status is final. A missing optional field means Yahoo did not provide a usable value; never infer one. Sleeper returns no projection. Sleeper status reports upcoming, in_progress, or final for the requested week; in_progress lasts from before kickoff until Sleeper rolls to the next week, so it does not prove games have started. Sleeper's winner appears only when status is final; mid-week, points are the live score, not a result. Sleeper keeps every provider matchup record: scheduleShape reports \"no_h2h_pairings\" with reason \"unknown\" when numeric groups are present but none form an H2H pair, and \"unpublished_or_unavailable\" when there are no usable pairing IDs. When it has both pairs and unpaired records, it reports the unpaired count. A singleton has away:null and is never labelled a bye or used to infer league format. To request compact player scores for one selected matchup, use detail: \"players\" with an explicit week and team_id; this is currently ESPN football only and only for season_year 2018 or later. Any other platform, sport, or earlier season returns MATCHUP_DETAIL_UNSUPPORTED. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so the model already knows the league's team names, owner/team mapping, and league context before interpreting the matchup. For multi-league comparisons, call once per league. Read-only. Current date is YYYY-MM-DD.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1926,7 +1926,7 @@
   {
     "name": "get_transactions",
     "title": "League Transactions",
-    "description": "Get recent league transaction activity: adds, drops, waivers, and trades. Completed activity is league-wide unless team_id is provided. For \"my moves,\" pass the selected league's user team ID from get_user_session; session context alone does not filter completed activity. Use get_league_info when team and owner names are needed. Rows are newest first and capped by count; check window, limitations, warning, and dropped_invalid_timestamp_count before claiming completeness. ESPN week selects a matchup period, and its structured source covers failed bids and trade lifecycle; a fallback can limit those types. Sleeper week selects a matchup week. Yahoo ignores week for completed activity and applies Flaim's rolling 30-day timestamp lookup. Yahoo team-filtered requests fetch one page of up to 100 league transactions before filtering; limitations.upstream_bound_reached means older matching rows inside the window may be missing, and raising count will not recover them. Yahoo type=waiver and type=pending_trade return the authenticated user's own pending items with no timestamp window; team_id only narrows those items. Yahoo pending rows can omit timestamp and date until Yahoo stamps them. Read-only. Current date is YYYY-MM-DD.",
+    "description": "Get recent league transaction activity: adds, drops, waivers, and trades. Completed activity is league-wide unless team_id is provided. For \"my moves,\" pass the selected league's user team ID from get_user_session; session context alone does not filter completed activity. Use get_league_info when team and owner names are needed. Rows are newest first and capped by count; before claiming completeness, check window, limitations, warning, truncated (ESPN only), and dropped_invalid_timestamp_count (ESPN and Yahoo). ESPN week selects a matchup period, and its structured source covers failed bids and trade lifecycle; a fallback can limit those types. Sleeper week selects a matchup week. Yahoo ignores week for completed activity and applies Flaim's rolling 30-day timestamp lookup. Yahoo team-filtered requests fetch one page of up to 100 league transactions before filtering; limitations.upstream_bound_reached means older matching rows inside the window may be missing, and raising count will not recover them. Yahoo type=waiver and type=pending_trade return the authenticated user's own pending items with no timestamp window; team_id only narrows those items. Yahoo pending rows can omit timestamp and date until Yahoo stamps them. Read-only. Current date is YYYY-MM-DD.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1984,7 +1984,7 @@
         },
         "team_id": {
           "type": "string",
-          "description": "Optional team filter, applied before count and echoed as window.team_id. For \"my moves,\" pass the selected league's user team ID from get_user_session; omit for league-wide activity. ESPN team ID; Sleeper roster ID; Yahoo full team key or session team ID. limitations.team_filter_unattributed_rows reports rows without team_ids that could not match. An ESPN trade without trade_sides may identify only one side, so filtering for the other side can miss it. Yahoo filters one upstream page of up to 100, so limitations.upstream_bound_reached can mean older matching rows are missing."
+          "description": "Optional team filter, applied before count and echoed as window.team_id. For \"my moves,\" pass the selected league's user team ID from get_user_session; omit for league-wide activity. ESPN team ID; Sleeper roster ID; Yahoo full team key or session team ID. limitations.team_filter_unattributed_rows reports rows without team_ids that could not match. An ESPN trade without trade_sides may identify only one side, so filtering for the other side can miss it; limitations.team_filter_sideless_trade_rows counts such rows the filter left out. Yahoo filters one upstream page of up to 100, so limitations.upstream_bound_reached can mean older matching rows are missing."
         }
       },
       "required": [
@@ -2130,13 +2130,19 @@
                 "structured_details_incomplete": {
                   "type": "boolean",
                   "const": true,
-                  "description": "ESPN only: some returned rows lack detail ESPN normally provides. Rows marked trade_details_unavailable lack their complete player exchange (or, for a proposal, its sender); the activity-feed fallback also lacks failed bids, FAAB amounts, and the trade lifecycle."
+                  "description": "ESPN only: some returned rows lack detail ESPN normally provides, or the team filter may have excluded trades it could not attribute (team_filter_sideless_trade_rows). Rows marked trade_details_unavailable lack their complete player exchange (or, for a proposal, its sender); the activity-feed fallback also lacks failed bids, FAAB amounts, and the trade lifecycle."
                 },
                 "omitted_unscoped_rows": {
-                  "type": "number"
+                  "type": "number",
+                  "description": "ESPN activity_feed source only: a best-effort count of rows left out because Flaim could not place them in the requested window. Undated rows may be counted here as well as in dropped_invalid_timestamp_count. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness."
                 },
                 "omitted_conflicting_rows": {
-                  "type": "number"
+                  "type": "number",
+                  "description": "ESPN activity_feed source only: a best-effort count of rows left out because their period evidence was contradictory, such as a message and its topic naming different periods, a matchup period and scoring period that disagree, or trade legs in different matchup periods. Undated rows may be counted here as well as in dropped_invalid_timestamp_count. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness."
+                },
+                "omitted_unrecognized_rows": {
+                  "type": "number",
+                  "description": "ESPN structured sources only: a best-effort count of rows ESPN returned that Flaim could not recognize or place, such as an unknown type, a missing scoring period, or a row without an ESPN ID that could not be told apart from another. Those rows are missing from transactions. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness."
                 },
                 "exact_date_bounds_unavailable": {
                   "type": "boolean",
@@ -2146,8 +2152,16 @@
                   "type": "boolean",
                   "const": true
                 },
+                "possibly_truncated": {
+                  "type": "boolean",
+                  "description": "More matching rows may exist than were returned. ESPN and Sleeper: the count cap cut matching rows. Yahoo: the count cap cut matching rows, or Yahoo's upstream page was full and (for completed activity) did not reach back to the start of the 30-day window, so older matching rows may not have been fetched. On ESPN, also check top-level truncated, which covers activity-feed coverage as well."
+                },
                 "team_filter_unattributed_rows": {
                   "type": "number"
+                },
+                "team_filter_sideless_trade_rows": {
+                  "type": "number",
+                  "description": "ESPN team-filtered requests only: trade-lifecycle rows that matched the type filter, had no trade_sides, and did not list the requested team. Their team_ids name only the acting team (possibly a commissioner or vetoing team), so the requested team may have been the other party. When present, structured_details_incomplete is set."
                 },
                 "upstream_bound_reached": {
                   "type": "boolean",
@@ -2160,7 +2174,8 @@
               "type": "number"
             },
             "truncated": {
-              "type": "boolean"
+              "type": "boolean",
+              "description": "ESPN only: true when the count cap cut matching rows or, on the activity_feed source, the time budget or page limit kept Flaim from proving the whole window was read. Yahoo and Sleeper do not send this field; use limitations.possibly_truncated."
             },
             "transactions": {
               "type": "array",
@@ -2168,10 +2183,20 @@
                 "type": "object",
                 "properties": {
                   "transaction_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Row ID. On ESPN it depends on source: structured rows (mTransactions2 and mTransactions2_with_activity_trade_details) use ESPN's transaction ID, while activity_feed rows use activity message or topic IDs, so the same transaction has a different ID when source changes. When ESPN supplies no ID, Flaim generates a key (on structured rows it starts with \"mtx-\"); a generated key is not an ESPN ID and is not guaranteed to be unique or stable across calls. Do not match ESPN rows across responses with different source values, or by a generated key, using this ID."
                   },
                   "timestamp": {
                     "type": "number"
+                  },
+                  "timestamp_source": {
+                    "type": "string",
+                    "enum": [
+                      "processDate",
+                      "proposedDate",
+                      "activity"
+                    ],
+                    "description": "ESPN only: where timestamp came from. processDate is when ESPN processed a structured row; proposedDate is a structured row's proposal time, used when it has no valid processDate; activity is the activity feed's message or topic date."
                   },
                   "date": {
                     "type": "string"
@@ -2366,7 +2391,8 @@
               "type": "string"
             },
             "dropped_invalid_timestamp_count": {
-              "type": "number"
+              "type": "number",
+              "description": "ESPN and Yahoo: a best-effort count of rows left out because the provider gave no valid date, counted before the type and team filters. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness. On ESPN these rows may also be counted in limitations.omitted_unscoped_rows or omitted_conflicting_rows. Yahoo reports it on completed-activity requests; type=waiver and type=pending_trade return undated pending rows without timestamp and date instead and report 0. Sleeper does not send this field."
             }
           },
           "additionalProperties": true,
