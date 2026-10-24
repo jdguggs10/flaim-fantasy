@@ -118,6 +118,15 @@
           "items": {
             "type": "string"
           }
+        },
+        "unavailablePlatforms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "instructions": {
+          "type": "string"
         }
       },
       "required": [
@@ -1513,6 +1522,9 @@
                 },
                 "additionalProperties": true
               }
+            },
+            "warning": {
+              "type": "string"
             }
           },
           "additionalProperties": true,
@@ -1901,6 +1913,10 @@
                 },
                 "additionalProperties": true
               }
+            },
+            "warning": {
+              "type": "string",
+              "description": "Present when part of the response is a fallback rather than the platform's answer, such as a seasonPhase Flaim could not confirm from the playoff bracket."
             }
           },
           "additionalProperties": true,
@@ -1960,7 +1976,7 @@
         "week": {
           "type": "integer",
           "minimum": 0,
-          "description": "Optional public week selector. ESPN accepts matchup period 0 or later (0 = preseason), including baseball, basketball, and hockey; omit it for the current and previous matchup periods. Sleeper accepts matchup week 1 or later; omit it for the current and previous week. Yahoo ignores week; Flaim applies a rolling 30-day timestamp lookup window for completed Yahoo transactions."
+          "description": "Optional public week selector. ESPN accepts matchup period 0 or later (0 = preseason), including baseball, basketball, and hockey; omit it for the current and previous matchup periods. Sleeper accepts matchup week 1 or later; omit it for the current and previous week, or, for football before the regular season, week 1 alone, where Sleeper tags preseason activity (window.mode is preseason). Yahoo ignores week; Flaim applies a rolling 30-day timestamp lookup window for completed Yahoo transactions."
         },
         "type": {
           "type": "string",
@@ -2142,7 +2158,7 @@
                 },
                 "omitted_unrecognized_rows": {
                   "type": "number",
-                  "description": "ESPN structured sources only: a best-effort count of rows ESPN returned that Flaim could not recognize or place, such as an unknown type, a missing scoring period, or a row without an ESPN ID that could not be told apart from another. Those rows are missing from transactions. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness."
+                  "description": "ESPN structured sources and Yahoo: a best-effort count of rows the provider returned that Flaim could not recognize or place. On ESPN that is an unknown type, a missing scoring period, or a row without an ESPN ID that could not be told apart from another; on Yahoo it is an unrecognized or malformed row (a transaction type Flaim does not recognize, or an entry with no transaction data), counted before the type, team, and timestamp filters. Those rows are missing from transactions. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness."
                 },
                 "exact_date_bounds_unavailable": {
                   "type": "boolean",
