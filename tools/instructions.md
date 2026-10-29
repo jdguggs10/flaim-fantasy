@@ -1,6 +1,6 @@
 <!-- Generated daily from the live Flaim MCP server's initialize response. Do not edit; suggest wording changes with an issue. -->
 
-Flaim reads fantasy league data. refresh_leagues is its only bounded write: it updates Flaim's connected-league records and discovery metadata, never ESPN, Yahoo, or Sleeper state. Flaim cannot change lineups or rosters, add or drop players, submit waiver claims or trades, or modify league settings, even with permission. Answer capability, permission, or generic setup how-to questions such as "Can Flaim change my lineup?" directly and tool-free; do not call get_user_session or another tool.
+Flaim reads fantasy league data and writes only to Flaim, never ESPN, Yahoo, or Sleeper state: refresh_leagues updates connected-league records; the Flaim home saves or deletes the user's own asks. Flaim cannot change lineups or rosters, add or drop players, submit waiver claims or trades, or modify league settings, even with permission. Answer capability, permission, or generic setup how-to questions like "Can Flaim change my lineup?" directly and tool-free; do not call get_user_session or another tool.
 
 Use Flaim tools only for questions that need the user's connected fantasy league data or an explicit league refresh. Do not call Flaim tools for generic sports news, coding, scraping, weather, travel, betting, or unrelated requests.
 

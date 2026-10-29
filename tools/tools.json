@@ -1,5 +1,86 @@
 [
   {
+    "name": "delete_flaim_home_ask",
+    "title": "Remove a Kept Ask",
+    "description": "Deletes one of the user's kept asks (\"Your asks\") from their Flaim account, when the user removes it in the Flaim home page. It is called by the Flaim home page and hidden from the model on hosts that support MCP Apps. Deleting an ask that is already gone changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "description": "The kept ask to delete."
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    },
+    "_meta": {
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "mcp:write"
+          ]
+        }
+      ],
+      "ui": {
+        "visibility": [
+          "app"
+        ]
+      }
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "ASKS_FULL",
+            "ASK_NOT_FOUND",
+            "INVALID",
+            "UNAVAILABLE"
+          ]
+        },
+        "max": {
+          "type": "number"
+        },
+        "count": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "success",
+        "max"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "securitySchemes": [
+      {
+        "type": "oauth2",
+        "scopes": [
+          "mcp:write"
+        ]
+      }
+    ]
+  },
+  {
     "name": "get_ancient_history",
     "title": "Ancient History",
     "description": "Use established session context (call get_user_session only if needed), and use this only when the user is clearly asking about a non-current season or an inactive league. This is the historical branch: it returns past seasons and historical leagues outside the current season view. Use for last season, older seasons, inactive leagues, or historical performance. All-time answers are scoped to seasons present in the response; an absent season may be unavailable even if provider history extends further. Sleeper coverage floor: Flaim follows the previous_league_id chain of each Sleeper league back at most 15 seasons including the current one and saves every season Sleeper still serves on it; Sleeper has run since 2017, so today that is the entire history of any Sleeper league. Sleeper seasons are discovered on connect and on refresh_leagues, so a league last synced under the earlier five-season limit needs one refresh before its older seasons appear here, and a season still missing after a refresh means Sleeper did not serve it on that walk, not that Flaim capped the history. thresholdYear is display bucketing, not a retrieval floor. Read-only.",
@@ -504,6 +585,155 @@
       "required": [
         "success",
         "data"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "securitySchemes": [
+      {
+        "type": "oauth2",
+        "scopes": [
+          "mcp:read"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "get_flaim_home_league",
+    "title": "League Details",
+    "description": "Loads sections of one league for the Flaim home page: standings, the user's current roster, the user's matchup for the current period, or the league's latest transactions, each as a small summary, plus the fuller matchup (both lineups or category rows, where the platform reports them) and full roster its team card shows. It is called by the Flaim home page and hidden from the model on hosts that support MCP Apps; for analysis use get_standings, get_roster, get_matchups, and get_transactions instead. Read-only: it reads from ESPN, Yahoo, or Sleeper through the same paths as those tools (football also reads ESPN's public NFL schedule for bye weeks and kickoff times), and results may be cached for a few minutes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "platform": {
+          "type": "string",
+          "enum": [
+            "espn",
+            "yahoo",
+            "sleeper"
+          ],
+          "description": "Fantasy platform"
+        },
+        "sport": {
+          "type": "string",
+          "enum": [
+            "football",
+            "baseball",
+            "basketball",
+            "hockey"
+          ],
+          "description": "Sport"
+        },
+        "league_id": {
+          "type": "string",
+          "description": "League ID from the Flaim home"
+        },
+        "season_year": {
+          "type": "number",
+          "description": "Season start year — use the season_year returned by get_user_session for this league; only pass an older year when the user explicitly asks about a past season. Basketball and hockey use the start year of a cross-year season (2024 = the 2024-25 season); football and baseball use the single season year (2025 = the 2025 season)."
+        },
+        "team_id": {
+          "type": "string",
+          "description": "The user's team ID in this league, from the Flaim home. Required for the roster, rosterFull, and matchupDetail sections."
+        },
+        "section": {
+          "type": "string",
+          "enum": [
+            "standings",
+            "roster",
+            "matchup",
+            "transactions",
+            "matchupDetail",
+            "rosterFull"
+          ],
+          "description": "One section to load. Give this or sections."
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "standings",
+              "roster",
+              "matchup",
+              "transactions",
+              "matchupDetail",
+              "rosterFull"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 6,
+          "description": "Several sections to load in one call; the result maps each to its summary. Give this or section."
+        }
+      },
+      "required": [
+        "platform",
+        "sport",
+        "league_id",
+        "season_year"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    },
+    "_meta": {
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "mcp:read"
+          ]
+        }
+      ],
+      "ui": {
+        "visibility": [
+          "app"
+        ]
+      }
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "section": {
+          "type": "string",
+          "enum": [
+            "standings",
+            "roster",
+            "matchup",
+            "transactions",
+            "matchupDetail",
+            "rosterFull"
+          ]
+        },
+        "sections": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "success"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "required": [
+        "success"
       ],
       "additionalProperties": true,
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2634,9 +2864,9 @@
       "openai/toolInvocation/invoking": "Loading your leagues…",
       "openai/toolInvocation/invoked": "Leagues loaded",
       "ui": {
-        "resourceUri": "ui://widget/user-session-v5.html"
+        "resourceUri": "ui://widget/user-session-v6.html"
       },
-      "openai/outputTemplate": "ui://widget/user-session-v5.html",
+      "openai/outputTemplate": "ui://widget/user-session-v6.html",
       "openai/widgetAccessible": true,
       "openai/resultCanProduceWidget": true
     },
@@ -2851,6 +3081,288 @@
     ]
   },
   {
+    "name": "open_flaim_home",
+    "title": "My Leagues",
+    "description": "Opens the Flaim home: a full-page view of the user's connected current-season fantasy leagues (sport, league name, and team name) with starter questions. It is a UI entrypoint the user opens from the ChatGPT sidebar, hidden from the model on hosts that support MCP Apps. For league questions or the user's league list, use get_user_session instead. Read-only: it reads the same Flaim league records and saved defaults as get_user_session, and the asks the user kept, plus which Flaim home features are turned on for them, for the page to show (the asks are not part of this result's text), and changes nothing.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {}
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    },
+    "_meta": {
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "mcp:read"
+          ]
+        }
+      ],
+      "ui": {
+        "resourceUri": "ui://widget/flaim-home-v1.html",
+        "visibility": [
+          "app"
+        ]
+      },
+      "openai/ui": {
+        "entrypoints": [
+          {
+            "type": "global"
+          }
+        ]
+      }
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "leagues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "platform": {
+                "type": "string"
+              },
+              "sport": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leagueId": {
+                "type": "string"
+              },
+              "seasonYear": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "season": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leagueName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "teamName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "teamId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "isDefault": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "platform",
+              "sport",
+              "leagueId",
+              "seasonYear",
+              "season",
+              "leagueName",
+              "teamName",
+              "teamId",
+              "isDefault"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "unavailablePlatforms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "success",
+        "leagues"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "securitySchemes": [
+      {
+        "type": "oauth2",
+        "scopes": [
+          "mcp:read"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "open_flaim_home_tab",
+    "title": "My Leagues in Chat",
+    "description": "Opens the Flaim home as a tab in the current chat: the user's connected current-season fantasy leagues, each team's matchup, roster, standings, and moves, and starter questions, which post into that chat when tapped. It is a UI entrypoint the user opens from a chat, hidden from the model on hosts that support MCP Apps. For league questions or the user's league list, use get_user_session instead. Read-only: it reads the same Flaim league records and saved defaults as get_user_session, and the asks the user kept, plus which Flaim home features are turned on for them, for the page to show (the asks are not part of this result's text), and changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "prefetch": {
+          "type": "boolean",
+          "description": "Set only by the Flaim page when it prepares the home in the background before the user opens it, so the call is counted apart from a home open. Leave it out."
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    },
+    "_meta": {
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "mcp:read"
+          ]
+        }
+      ],
+      "ui": {
+        "resourceUri": "ui://widget/flaim-home-chat-v1.html",
+        "visibility": [
+          "app"
+        ]
+      },
+      "openai/ui": {
+        "entrypoints": [
+          {
+            "type": "thread"
+          }
+        ]
+      }
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "leagues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "platform": {
+                "type": "string"
+              },
+              "sport": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leagueId": {
+                "type": "string"
+              },
+              "seasonYear": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "season": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leagueName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "teamName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "teamId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "isDefault": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "platform",
+              "sport",
+              "leagueId",
+              "seasonYear",
+              "season",
+              "leagueName",
+              "teamName",
+              "teamId",
+              "isDefault"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "unavailablePlatforms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "success",
+        "leagues"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "securitySchemes": [
+      {
+        "type": "oauth2",
+        "scopes": [
+          "mcp:read"
+        ]
+      }
+    ]
+  },
+  {
     "name": "refresh_leagues",
     "title": "Refresh Leagues",
     "description": "Refresh connected fantasy leagues by asking Flaim to rediscover leagues through connected ESPN, Yahoo, and Sleeper accounts. Use only when the user explicitly asks to refresh, or from the refresh control on the league widget where the client supports it. This is non-destructive, but repeated refreshes can update Flaim registry timestamps and provider metadata; it does not change provider lineups or rosters, add or drop players, submit waiver claims or trades, or modify league settings. If this call succeeds, call get_user_session again to show the updated league list. If it fails, follow the error retry guidance and any retry_after value; do not retry in a loop.",
@@ -2943,6 +3455,191 @@
       },
       "required": [
         "success"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "securitySchemes": [
+      {
+        "type": "oauth2",
+        "scopes": [
+          "mcp:write"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "reorder_flaim_home_asks",
+    "title": "Reorder Kept Asks",
+    "description": "Puts the user's kept asks (\"Your asks\") in a new order on their Flaim account, when the user moves one up or down in the Flaim home page. It is called by the Flaim home page and hidden from the model on hosts that support MCP Apps. It takes every kept ask's id, in the new order, and changes nothing but the order.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          },
+          "minItems": 1,
+          "maxItems": 12,
+          "description": "Every one of the user's kept asks, by id, in the new order."
+        }
+      },
+      "required": [
+        "ids"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    },
+    "_meta": {
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "mcp:write"
+          ]
+        }
+      ],
+      "ui": {
+        "visibility": [
+          "app"
+        ]
+      }
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "ORDER_MISMATCH",
+            "INVALID",
+            "UNAVAILABLE"
+          ]
+        },
+        "max": {
+          "type": "number"
+        },
+        "count": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "success",
+        "max"
+      ],
+      "additionalProperties": true,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "securitySchemes": [
+      {
+        "type": "oauth2",
+        "scopes": [
+          "mcp:write"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "save_flaim_home_ask",
+    "title": "Keep an Ask",
+    "description": "Saves one of the user's kept asks (\"Your asks\") from the Flaim home page: adds a new ask, or edits the name and wording of one the user already kept, on the user's Flaim account. It is called by the Flaim home page and hidden from the model on hosts that support MCP Apps. It changes only the user's saved asks, never league data or anything on ESPN, Yahoo, or Sleeper.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "description": "The kept ask to edit. Leave it out to add a new ask."
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "The name the ask shows under in Your asks."
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600,
+          "description": "The ask as the user wants it sent, without the \"Using Flaim, \" lead-in the page adds back."
+        },
+        "source_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "The Try asking prompt this ask replaces, as prompt:<n>, when it replaces one. Ignored on an edit."
+        }
+      },
+      "required": [
+        "label",
+        "text"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    },
+    "_meta": {
+      "securitySchemes": [
+        {
+          "type": "oauth2",
+          "scopes": [
+            "mcp:write"
+          ]
+        }
+      ],
+      "ui": {
+        "visibility": [
+          "app"
+        ]
+      }
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "ASKS_FULL",
+            "ASK_NOT_FOUND",
+            "INVALID",
+            "UNAVAILABLE"
+          ]
+        },
+        "max": {
+          "type": "number"
+        },
+        "count": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "success",
+        "max"
       ],
       "additionalProperties": true,
       "$schema": "http://json-schema.org/draft-07/schema#"
