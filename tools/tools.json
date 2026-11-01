@@ -2154,7 +2154,7 @@
   {
     "name": "get_standings",
     "title": "League Standings",
-    "description": "Get season standings and outcome snapshot; includes verified season-outcome fields when available. Returns team records, rankings, and points summaries. The rank field is a standings sort position (1 = best): on ESPN it follows ESPN's playoffSeed order when every team has a unique valid seed; otherwise Flaim computes it from win percentage (a tie counts as half a win), with wins as the tie-breaker. On Sleeper it is computed by Flaim from wins, with points for as the tie-breaker; on Yahoo it is passed through from Yahoo's own standings API. It is NOT a verified postseason finish. For verified postseason outcome, use finalRank and championshipWon instead. Also returns seasonPhase (regular_season/playoffs_in_progress/season_complete), seasonComplete, and per-team outcome fields: finalRank, championshipWon, playoffOutcome, outcomeConfidence, madePlayoffs, playoffSeed. Outcome fields are null when not verifiable — do not infer championship from rank or team name. outcomeConfidence is 'explicit' when the platform reports final ranks, or 'derived' when the champion and runner-up were determined from the final winners-bracket matchup (ESPN historical seasons may omit final ranks); 'derived' only ever appears on ESPN — Yahoo always returns null here, and Sleeper returns 'explicit' for any completed season whose winners bracket names a champion, including when the finish came from the bracket rather than from reported placements; a tied championship game is resolved using the league's playoff tie rule (ESPN's default advances the higher seed). Note: playoffOutcome returns 'in_progress' on Sleeper for teams in active playoffs; ESPN and Yahoo return null for that state. ESPN may also include projected-rank fields. Every platform also returns waiverPriority (the team's current waiver-claim priority, 1 = first — this is the live priority, NOT get_transactions' waiver_priority, which is the priority some past claim used), and Yahoo and Sleeper add faabBalance (remaining free-agent budget; 0 means spent out, not unknown; on Sleeper it already reflects FAAB traded between teams, so it can exceed the league's starting budget). Either can be null (not applicable, or not reported by the platform — do not read null as proof the league lacks FAAB) and they are not mutually exclusive: a FAAB league may also report waiverPriority as its tie-breaker for equal bids. ESPN standings omit faabBalance entirely rather than returning null. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so team names and league context are already established. For multi-league comparisons, call once per league. For historical finish questions, call get_ancient_history first to discover seasons, then call this tool per season for verified outcomes. Read-only. Current date is YYYY-MM-DD.",
+    "description": "Get season standings and outcome snapshot; includes verified season-outcome fields when available. Returns team records, rankings, and points summaries. The rank field is a standings sort position (1 = best): on ESPN it follows ESPN's playoffSeed order when every team has a unique valid seed; otherwise Flaim computes it from win percentage (a tie counts as half a win), with wins as the tie-breaker. On Sleeper it is computed by Flaim from wins, with points for as the tie-breaker; on Yahoo it is passed through from Yahoo's own standings API. It is NOT a verified postseason finish. For verified postseason outcome, use finalRank and championshipWon instead. Also returns seasonPhase (regular_season/playoffs_in_progress/season_complete), seasonComplete, and per-team outcome fields: finalRank, championshipWon, playoffOutcome, outcomeConfidence, madePlayoffs, playoffSeed. Outcome fields are null when not verifiable — do not infer championship from rank or team name. outcomeConfidence is 'explicit' when the platform reports final ranks, or 'derived' when the champion and runner-up were determined from the final winners-bracket matchup (ESPN historical seasons may omit final ranks); 'derived' only ever appears on ESPN — Yahoo always returns null here, and Sleeper returns 'explicit' for any completed season whose winners bracket names a champion, including when the finish came from the bracket rather than from reported placements; a tied championship game is resolved using the league's playoff tie rule (ESPN's default advances the higher seed). Note: playoffOutcome returns 'in_progress' on Sleeper for teams in active playoffs; ESPN and Yahoo return null for that state. ESPN may also include projected-rank fields. Every platform also returns waiverPriority (the team's current waiver-claim priority, 1 = first — this is the live priority, NOT get_transactions' waiver_priority, which is the priority some past claim used), and Yahoo and Sleeper add faabBalance (remaining free-agent budget; 0 means spent out, not unknown; on Sleeper it already reflects FAAB traded between teams, so it can exceed the league's starting budget). Either can be null (not applicable, or not reported by the platform — do not read null as proof the league lacks FAAB) and they are not mutually exclusive: a FAAB league may also report waiverPriority as its tie-breaker for equal bids. ESPN standings omit faabBalance entirely rather than returning null. Yahoo basketball Roto additionally returns each team's roto block: season stat values, Yahoo-reported per-category points, a separate overall totalPoints, and independent statsCoverage/pointsCoverage. These are season totals, not current-week or date scores. Raw ratio and percentage strings retain Yahoo's precision. Null means unknown, never zero; genuine zero and decimal points are preserved. The category rows can include display-only or unscored stats: do not infer the configured scoring categories from row counts, numeric point counts, or isDisplayOnly:false. Missing labels or metadata stay unknown. Category points are not category ranks; no category ranks, neighbor gaps or attainable gains are supplied or guaranteed. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so team names and league context are already established. For multi-league comparisons, call once per league. For historical finish questions, call get_ancient_history first to discover seasons, then call this tool per season for verified outcomes. Read-only. Current date is YYYY-MM-DD.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -2237,6 +2237,14 @@
             "leagueName": {
               "type": "string"
             },
+            "scoringType": {
+              "type": "string",
+              "description": "Yahoo basketball Roto reports roto; other standings formats currently omit this field"
+            },
+            "scoringTypeRaw": {
+              "type": "string",
+              "description": "Provider scoring code for Yahoo basketball Roto"
+            },
             "seasonPhase": {
               "type": "string",
               "description": "regular_season, playoffs_in_progress, or season_complete"
@@ -2249,6 +2257,125 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "roto": {
+                    "type": "object",
+                    "properties": {
+                      "statsCoverage": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "season"
+                              },
+                              "season": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9999
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "season"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Echoed season coverage matching the requested league season, or null; identifies period, not category completeness"
+                      },
+                      "pointsCoverage": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/properties/data/properties/standings/items/properties/roto/properties/statsCoverage/anyOf/0"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Independent coverage for the provider point rows and total; null prevents mixing another period into season data"
+                      },
+                      "totalPoints": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "description": "Yahoo overall Roto team-point total, distinct from each stat row's category points and from legacy pointsFor"
+                      },
+                      "categories": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "statId": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "displayName": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "isDisplayOnly": {
+                              "type": [
+                                "boolean",
+                                "null"
+                              ],
+                              "description": "Yahoo metadata marks display-only; false means not marked, not proof the stat scores; null means metadata unavailable"
+                            },
+                            "value": {
+                              "anyOf": [
+                                {
+                                  "type": [
+                                    "number",
+                                    "string"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Reported season stat value, preserving raw ratio and percentage strings; null means unknown"
+                            },
+                            "points": {
+                              "type": [
+                                "number",
+                                "null"
+                              ],
+                              "description": "Yahoo-reported category Roto points, not rank or a derived award; zero is preserved and null means unknown"
+                            }
+                          },
+                          "required": [
+                            "statId",
+                            "name",
+                            "displayName",
+                            "isDisplayOnly",
+                            "value",
+                            "points"
+                          ],
+                          "additionalProperties": true
+                        },
+                        "description": "Union of reported season stat/point IDs, including display-only or unscored rows; not the configured scored-category set"
+                      }
+                    },
+                    "required": [
+                      "statsCoverage",
+                      "pointsCoverage",
+                      "totalPoints",
+                      "categories"
+                    ],
+                    "additionalProperties": true,
+                    "description": "Yahoo basketball Roto only; additive provider-reported season statistics and category points"
+                  },
                   "playoffSeed": {
                     "type": [
                       "number",
