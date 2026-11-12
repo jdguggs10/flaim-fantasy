@@ -796,7 +796,7 @@
         },
         "include_inventory_details": {
           "type": "boolean",
-          "description": "ESPN football inventory pages only: include league-scored actual season points and points per game, projected season points (not weekly projections), and recognized injury status. Requires explicit offset. Missing injury status means unknown, not healthy."
+          "description": "ESPN football inventory pages (explicit offset) only: include league-scored actual season points and points per game, projected season points (not weekly projections), and recognized injury status. Ignored elsewhere; ordinary ranked ESPN lists already carry these fields. Missing injury status means unknown, not healthy."
         }
       },
       "required": [
