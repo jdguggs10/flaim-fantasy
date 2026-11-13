@@ -4,6 +4,7 @@
     "title": "Remove a Kept Ask",
     "description": "Deletes one of the user's kept asks (\"Your asks\") from their Flaim account, when the user removes it in the Flaim home page. It is called by the Flaim home page and hidden from the model on hosts that support MCP Apps. Deleting an ask that is already gone changes nothing.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "id": {
@@ -15,8 +16,7 @@
       "required": [
         "id"
       ],
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": false,
@@ -43,6 +43,7 @@
       }
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -68,8 +69,7 @@
         "success",
         "max"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -85,20 +85,20 @@
     "title": "Ancient History",
     "description": "Use established session context (call get_user_session only if needed), and use this only when the user is clearly asking about a non-current season or an inactive league. This is the historical branch: it returns past seasons and historical leagues outside the current season view. Use for last season, older seasons, inactive leagues, or historical performance. All-time answers are scoped to seasons present in the response; an absent season may be unavailable even if provider history extends further. Sleeper coverage floor: Flaim follows the previous_league_id chain of each Sleeper league back at most 15 seasons including the current one and saves every season Sleeper still serves on it; Sleeper has run since 2017, so today that is the entire history of any Sleeper league. Sleeper seasons are discovered on connect and on refresh_leagues, so a league last synced under the earlier five-season limit needs one refresh before its older seasons appear here, and a season still missing after a refresh means Sleeper did not serve it on that walk, not that Flaim capped the history. thresholdYear is display bucketing, not a retrieval floor. Read-only.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "platform": {
+          "description": "Optional: filter to specific platform",
           "type": "string",
           "enum": [
             "espn",
             "yahoo",
             "sleeper"
-          ],
-          "description": "Optional: filter to specific platform"
+          ]
         }
       },
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": true,
@@ -122,6 +122,7 @@
       "openai/toolInvocation/invoked": "History loaded"
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -176,15 +177,61 @@
               "leagueId",
               "platform"
             ],
-            "additionalProperties": true
+            "additionalProperties": {}
           }
         },
         "oldSeasonsFromActiveLeagues": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {
             "type": "array",
             "items": {
-              "$ref": "#/properties/oldLeagues/items"
+              "type": "object",
+              "properties": {
+                "leagueId": {
+                  "type": "string"
+                },
+                "sport": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "platform": {
+                  "type": "string"
+                },
+                "teamId": {
+                  "type": "string"
+                },
+                "seasonYear": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "leagueName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "teamName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "recurringLeagueId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "leagueId",
+                "platform"
+              ],
+              "additionalProperties": {}
             }
           }
         },
@@ -218,8 +265,7 @@
         "totalOldLeagues",
         "totalOldSeasons"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -235,6 +281,7 @@
     "title": "Draft Results and Pick Ownership",
     "description": "Use this when the user asks about completed draft results, exact draft-board positions, or current draft-pick ownership for a selected league. Returns a common draft summary and ordered picks with explicit confirmed, projected, or unavailable placement provenance. A historical selecting team is not a current pick owner; current ownership comes only from ownership.picks[].currentOwnerTeamId. ESPN and Yahoo expose confirmed draft results but no current pick-ownership ledger, so their responses carry no ownership block at all; only Sleeper can report current or future pick ownership, and an exact board placement only when Sleeper supplies enough draft-order evidence. An ownership.scope of changed_picks_only lists only picks known to have changed hands and is not a complete pick inventory. selectionInRound is the round slot rendered in a value such as 12.15, while draftColumn is the stable draft-board column; they are not interchangeable. For a completed Sleeper draft, an omitted ownership block means no draft picks changed hands. Use round to return one draft round. Use team_id to return completed selections made by that historical team and ownership rows currently owned by that team. Omit draft_id to use the league's associated draft; draft_id is Sleeper-only and should be passed only when Flaim previously returned a provider draft ID. Omit season_year for the current sport season, or pass the season_year returned by get_user_session for a specific league or past draft. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it. For multi-league comparisons, call once per league. Read-only.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "platform": {
@@ -261,23 +308,26 @@
           "description": "League ID (get from get_user_session)"
         },
         "season_year": {
+          "description": "Season start year. Omit for the current sport season; use the season_year returned by get_user_session for this league or a past draft. Basketball and hockey use the start year of a cross-year season (2024 = the 2024-25 season); football and baseball use the single season year (2025 = the 2025 season).",
           "type": "integer",
-          "description": "Season start year. Omit for the current sport season; use the season_year returned by get_user_session for this league or a past draft. Basketball and hockey use the start year of a cross-year season (2024 = the 2024-25 season); football and baseball use the single season year (2025 = the 2025 season)."
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
         },
         "draft_id": {
+          "description": "Optional Sleeper draft ID. Omit to retrieve the league's associated draft; pass only an ID previously returned by Flaim.",
           "type": "string",
-          "minLength": 1,
-          "description": "Optional Sleeper draft ID. Omit to retrieve the league's associated draft; pass only an ID previously returned by Flaim."
+          "minLength": 1
         },
         "round": {
+          "description": "Optional positive draft round. Returns only completed selections and ownership rows from this round.",
           "type": "integer",
           "exclusiveMinimum": 0,
-          "description": "Optional positive draft round. Returns only completed selections and ownership rows from this round."
+          "maximum": 9007199254740991
         },
         "team_id": {
+          "description": "Optional provider team ID. Filters completed selections by historical selecting team and ownership rows by current owner.",
           "type": "string",
-          "minLength": 1,
-          "description": "Optional provider team ID. Filters completed selections by historical selecting team and ownership rows by current owner."
+          "minLength": 1
         }
       },
       "required": [
@@ -285,8 +335,7 @@
         "sport",
         "league_id"
       ],
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": true,
@@ -310,6 +359,7 @@
       "openai/toolInvocation/invoked": "Draft results ready"
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -364,23 +414,25 @@
                 },
                 "rounds": {
                   "type": "integer",
-                  "exclusiveMinimum": 0
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
                 },
                 "teams": {
                   "type": "integer",
-                  "exclusiveMinimum": 0
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
                 },
                 "playerPool": {
                   "type": "object",
                   "properties": {},
-                  "additionalProperties": true
+                  "additionalProperties": {}
                 }
               },
               "required": [
                 "type",
                 "status"
               ],
-              "additionalProperties": true
+              "additionalProperties": {}
             },
             "picks": {
               "type": "array",
@@ -389,19 +441,23 @@
                 "properties": {
                   "round": {
                     "type": "integer",
-                    "exclusiveMinimum": 0
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
                   },
                   "selectionInRound": {
                     "type": "integer",
-                    "exclusiveMinimum": 0
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
                   },
                   "overallPick": {
                     "type": "integer",
-                    "exclusiveMinimum": 0
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
                   },
                   "draftColumn": {
                     "type": "integer",
-                    "exclusiveMinimum": 0
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
                   },
                   "selectionTeamId": {
                     "type": [
@@ -451,7 +507,7 @@
                       "amount",
                       "unit"
                     ],
-                    "additionalProperties": true
+                    "additionalProperties": {}
                   },
                   "placement": {
                     "type": "object",
@@ -477,29 +533,35 @@
                       "status",
                       "source"
                     ],
-                    "additionalProperties": true
+                    "additionalProperties": {}
                   }
                 },
                 "required": [
                   "round",
                   "placement"
                 ],
-                "additionalProperties": true
+                "additionalProperties": {}
               }
             },
             "teams": {
+              "description": "Team names keyed by provider team ID",
               "type": "object",
-              "additionalProperties": {
+              "propertyNames": {
                 "type": "string"
               },
-              "description": "Team names keyed by provider team ID"
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "teamOwners": {
+              "description": "Owner names keyed by provider team ID",
               "type": "object",
-              "additionalProperties": {
+              "propertyNames": {
                 "type": "string"
               },
-              "description": "Owner names keyed by provider team ID"
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "ownership": {
               "type": "object",
@@ -522,19 +584,23 @@
                       },
                       "round": {
                         "type": "integer",
-                        "exclusiveMinimum": 0
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
                       },
                       "draftColumn": {
                         "type": "integer",
-                        "exclusiveMinimum": 0
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
                       },
                       "selectionInRound": {
                         "type": "integer",
-                        "exclusiveMinimum": 0
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
                       },
                       "overallPick": {
                         "type": "integer",
-                        "exclusiveMinimum": 0
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
                       },
                       "originalTeamId": {
                         "type": [
@@ -549,7 +615,30 @@
                         ]
                       },
                       "placement": {
-                        "$ref": "#/properties/data/properties/picks/items/properties/placement"
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "confirmed",
+                              "projected",
+                              "unavailable"
+                            ]
+                          },
+                          "source": {
+                            "type": "string",
+                            "enum": [
+                              "provider_pick",
+                              "provider_order_derived",
+                              "no_provider_order"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "source"
+                        ],
+                        "additionalProperties": {}
                       }
                     },
                     "required": [
@@ -559,7 +648,7 @@
                       "currentOwnerTeamId",
                       "placement"
                     ],
-                    "additionalProperties": true
+                    "additionalProperties": {}
                   }
                 }
               },
@@ -567,7 +656,7 @@
                 "scope",
                 "picks"
               ],
-              "additionalProperties": true
+              "additionalProperties": {}
             }
           },
           "required": [
@@ -578,7 +667,7 @@
             "draft",
             "picks"
           ],
-          "additionalProperties": true,
+          "additionalProperties": {},
           "description": "Platform envelope. Field availability varies by platform (ESPN, Yahoo, Sleeper); absent fields are not provided by that platform."
         }
       },
@@ -586,8 +675,7 @@
         "success",
         "data"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -603,6 +691,7 @@
     "title": "League Details",
     "description": "Loads sections of one league for the Flaim home page: standings, the user's current roster, the user's matchup for the current period, or the league's latest transactions, each as a small summary, plus the fuller matchup (both lineups or category rows, where the platform reports them) and full roster its team card shows. It is called by the Flaim home page and hidden from the model on hosts that support MCP Apps; for analysis use get_standings, get_roster, get_matchups, and get_transactions instead. Read-only: it reads from ESPN, Yahoo, or Sleeper through the same paths as those tools (football also reads ESPN's public NFL schedule for bye weeks and kickoff times), and results may be cached for a few minutes.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "platform": {
@@ -633,10 +722,11 @@
           "description": "Season start year — use the season_year returned by get_user_session for this league; only pass an older year when the user explicitly asks about a past season. Basketball and hockey use the start year of a cross-year season (2024 = the 2024-25 season); football and baseball use the single season year (2025 = the 2025 season)."
         },
         "team_id": {
-          "type": "string",
-          "description": "The user's team ID in this league, from the Flaim home. Required for the roster, rosterFull, and matchupDetail sections."
+          "description": "The user's team ID in this league, from the Flaim home. Required for the roster, rosterFull, and matchupDetail sections.",
+          "type": "string"
         },
         "section": {
+          "description": "One section to load. Give this or sections.",
           "type": "string",
           "enum": [
             "standings",
@@ -645,10 +735,12 @@
             "transactions",
             "matchupDetail",
             "rosterFull"
-          ],
-          "description": "One section to load. Give this or sections."
+          ]
         },
         "sections": {
+          "description": "Several sections to load in one call; the result maps each to its summary. Give this or section.",
+          "minItems": 1,
+          "maxItems": 6,
           "type": "array",
           "items": {
             "type": "string",
@@ -660,10 +752,7 @@
               "matchupDetail",
               "rosterFull"
             ]
-          },
-          "minItems": 1,
-          "maxItems": 6,
-          "description": "Several sections to load in one call; the result maps each to its summary. Give this or section."
+          }
         }
       },
       "required": [
@@ -672,8 +761,7 @@
         "league_id",
         "season_year"
       ],
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": true,
@@ -700,6 +788,7 @@
       }
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -718,6 +807,9 @@
         },
         "sections": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {
             "type": "object",
             "properties": {
@@ -728,15 +820,14 @@
             "required": [
               "success"
             ],
-            "additionalProperties": true
+            "additionalProperties": {}
           }
         }
       },
       "required": [
         "success"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -752,6 +843,7 @@
     "title": "Available Players",
     "description": "Get players available to acquire in the specified fantasy league, optionally filtered by position. This is fantasy-league availability, not professional-contract status. Pass a requested count exactly from 1 through 100. For a request above 100, start compact inventory paging with offset 0 and count up to 100, then pass each returned pagination.nextOffset until the requested number is reached, endReached is true, or no nextOffset is returned. Inventory pages are live best-effort, not a point-in-time snapshot: availability can change while pages are fetched, so never promise an exact complete inventory, no duplicates, or no omissions. Inventory pages preserve provider order: ESPN roster rate, Yahoo overall rank, Sleeper trending then rank; Yahoo inventory pages are not globally market-rate sorted. Prefer the canonical fields: every response carries leagueId, seasonYear, position, count, ordering, capabilities, and ownershipScope; entries carry team (real-life club, null when none) and id (platform player id as a string, when supplied) on every platform, ESPN and Yahoo entries add acquisitionState (\"free_agent\", \"waivers\", or null when the platform cannot determine the subtype), and ESPN waiver rows may also add waiverClearsAt (ISO time). Yahoo waiver rows may instead add waiverDate as a YYYY-MM-DD calendar date with no time or timezone; never turn it into an exact clearance time. Legacy platform fields remain alongside for compatibility on ordinary ranked calls, while inventory pages return compact fields by default. For ESPN football inventory requests asking for scoring or injury details, set include_inventory_details true on every offset page. These are season totals and averages, not weekly projections; an absent injury status means unknown, not healthy. Refer to leagues, teams, and players by name in answers; IDs are for tool calls only and must not be printed. ESPN always marks capabilities.acquisitionState true. Yahoo marks it true only when at least one returned entry has a known state; Yahoo entries still carry acquisitionState null when the flag is false. ownershipScope \"platform_global\" means percentOwned/percentStarted cover all leagues on that platform — never ownership within the selected league. An ESPN-wide started rate is never conditional on the player being rostered. Label every reported percentage as an ESPN-wide roster/start rate or Yahoo-wide market rate. Translate ownership scope silently into that provider-wide wording; never print the ownershipScope key, platform_global enum, or get_free_agents tool name. If capabilities marks rates unavailable, write \"[Provider] market ownership rate: not provided\"; do not print a missing response field name or null value, call get_players, or offer a lookup. When acquisitionState is null or not present, call rows \"available players,\" never specifically free agents or waivers, and do not promise an immediate add. A returned player is already confirmed available in that league. acquisitionState is the provider-reported subtype, not a guarantee that a specific roster move is legal; do not promise an immediate add from it alone. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. Use get_roster only when the current request separately asks who owns a player; never offer it after an available-player result. Do not include injuryStatus or any injury detail unless the user asks for it; when asked, verify current web evidence and translate provider codes into plain language. State acquisition status in plain language from acquisitionState (\"a free agent\", \"on waivers\"); never print raw codes — neither provider codes such as FREEAGENT or WAIVERS nor canonical values like free_agent verbatim. Use current web evidence before adding analysis or pickup recommendations. Use established session context (call get_user_session only if needed), then get_league_info for the selected league if this chat has not already loaded it; fan out once per league for comparisons. Requires authentication on ESPN/Yahoo; Sleeper uses the public API. Read-only. Hard stop: after satisfying a returned-list or field-explanation request, end the answer immediately after the requested facts. Remove every closing question or offer to do more work, including roster checks, lineup-fit checks, comparisons, rankings, recommendations, role or health analysis, trends, or outlooks; never append \"if you want\", \"tell me which player\", or a similar invitation unless the user's current request explicitly asks for that additional work.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "platform": {
@@ -782,21 +874,22 @@
           "description": "Season start year — use the season_year returned by get_user_session for this league; only pass an older year when the user explicitly asks about a past season. Basketball and hockey use the start year of a cross-year season (2024 = the 2024-25 season); football and baseball use the single season year (2025 = the 2025 season)."
         },
         "position": {
-          "type": "string",
-          "description": "Filter by position (e.g., \"QB\", \"RB\", \"SP\", \"C\"). Default: ALL"
+          "description": "Filter by position (e.g., \"QB\", \"RB\", \"SP\", \"C\"). Default: ALL",
+          "type": "string"
         },
         "count": {
-          "type": "number",
-          "description": "Maximum players in this response (max: 100). For requests up to 100, pass the requested number exactly. For larger inventory requests, use at most 100 per offset page and reduce the final page to the remaining requested rows. Omit only when no number was requested (default: 25)."
+          "description": "Maximum players in this response (max: 100). For requests up to 100, pass the requested number exactly. For larger inventory requests, use at most 100 per offset page and reduce the final page to the remaining requested rows. Omit only when no number was requested (default: 25).",
+          "type": "number"
         },
         "offset": {
+          "description": "Opt in to inventory paging at this zero-based offset. Omit for the ordinary ranked list; use returned pagination.nextOffset to continue. Inventory pages are live best-effort, not a snapshot.",
           "type": "integer",
           "minimum": 0,
-          "description": "Opt in to inventory paging at this zero-based offset. Omit for the ordinary ranked list; use returned pagination.nextOffset to continue. Inventory pages are live best-effort, not a snapshot."
+          "maximum": 9007199254740991
         },
         "include_inventory_details": {
-          "type": "boolean",
-          "description": "ESPN football inventory pages (explicit offset) only: include league-scored actual season points and points per game, projected season points (not weekly projections), and recognized injury status. Ignored elsewhere; ordinary ranked ESPN lists already carry these fields. Missing injury status means unknown, not healthy."
+          "description": "ESPN football inventory pages (explicit offset) only: include league-scored actual season points and points per game, projected season points (not weekly projections), and recognized injury status. Ignored elsewhere; ordinary ranked ESPN lists already carry these fields. Missing injury status means unknown, not healthy.",
+          "type": "boolean"
         }
       },
       "required": [
@@ -805,8 +898,7 @@
         "league_id",
         "season_year"
       ],
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": true,
@@ -830,6 +922,7 @@
       "openai/toolInvocation/invoked": "Available players ready"
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -880,7 +973,7 @@
                 "rosteredRate",
                 "startedRate"
               ],
-              "additionalProperties": true,
+              "additionalProperties": {},
               "description": "Capability and response-coverage flags. ESPN acquisitionState is always true; Yahoo acquisitionState is true only when at least one returned entry has a known state, though unknown Yahoo rows still carry null; Sleeper acquisitionState is false and omits the field"
             },
             "ownershipScope": {
@@ -898,11 +991,13 @@
               "type": "string"
             },
             "freeAgents": {
+              "description": "ESPN/Yahoo available-player entries",
               "type": "array",
               "items": {
                 "type": "object",
                 "properties": {
                   "acquisitionState": {
+                    "description": "Canonical acquisition state: \"free_agent\", \"waivers\", or null when the platform could not determine the subtype. ESPN and Yahoo entries carry this field; Yahoo keeps null rows even when capabilities.acquisitionState is false. Sleeper omits it",
                     "anyOf": [
                       {
                         "type": "string",
@@ -914,34 +1009,33 @@
                       {
                         "type": "null"
                       }
-                    ],
-                    "description": "Canonical acquisition state: \"free_agent\", \"waivers\", or null when the platform could not determine the subtype. ESPN and Yahoo entries carry this field; Yahoo keeps null rows even when capabilities.acquisitionState is false. Sleeper omits it"
+                    ]
                   },
                   "waiverClearsAt": {
-                    "type": "string",
-                    "description": "ISO 8601 waiver clear time (ESPN only, only on rows whose acquisitionState is \"waivers\" with a valid provider timestamp)"
+                    "description": "ISO 8601 waiver clear time (ESPN only, only on rows whose acquisitionState is \"waivers\" with a valid provider timestamp)",
+                    "type": "string"
                   },
                   "waiverDate": {
-                    "type": "string",
-                    "description": "Yahoo only: waiver clear calendar date in YYYY-MM-DD form, only on waiver rows. Yahoo provides no time or timezone, so do not treat it as an exact clearance instant"
+                    "description": "Yahoo only: waiver clear calendar date in YYYY-MM-DD form, only on waiver rows. Yahoo provides no time or timezone, so do not treat it as an exact clearance instant",
+                    "type": "string"
                   },
                   "id": {
-                    "type": "string",
-                    "description": "Platform-local player id as a string"
+                    "description": "Platform-local player id as a string",
+                    "type": "string"
                   },
                   "team": {
+                    "description": "Real-life club abbreviation, null when the platform lists none",
                     "type": [
                       "string",
                       "null"
-                    ],
-                    "description": "Real-life club abbreviation, null when the platform lists none"
+                    ]
                   },
                   "percentOwned": {
+                    "description": "ESPN-wide roster rate or Yahoo-wide market rate; null/absent when the provider reports none",
                     "type": [
                       "number",
                       "null"
-                    ],
-                    "description": "ESPN-wide roster rate or Yahoo-wide market rate; null/absent when the provider reports none"
+                    ]
                   },
                   "percentStarted": {
                     "type": [
@@ -950,13 +1044,14 @@
                     ]
                   },
                   "status": {
+                    "description": "Legacy: ESPN acquisition enum (prefer acquisitionState); on Yahoo an unrelated player designation",
                     "type": [
                       "string",
                       "null"
-                    ],
-                    "description": "Legacy: ESPN acquisition enum (prefer acquisitionState); on Yahoo an unrelated player designation"
+                    ]
                   },
                   "ownershipType": {
+                    "description": "Yahoo provider-native ownership subtype (prefer acquisitionState); null when Yahoo omitted it or returned an unsupported value",
                     "anyOf": [
                       {
                         "type": "string",
@@ -968,63 +1063,55 @@
                       {
                         "type": "null"
                       }
-                    ],
-                    "description": "Yahoo provider-native ownership subtype (prefer acquisitionState); null when Yahoo omitted it or returned an unsupported value"
+                    ]
                   },
                   "waiverProcessDate": {
-                    "anyOf": [
-                      {
-                        "type": [
-                          "string",
-                          "number"
-                        ]
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ],
-                    "description": "Legacy epoch-ms form of waiverClearsAt"
+                    "description": "Legacy epoch-ms form of waiverClearsAt",
+                    "type": [
+                      "string",
+                      "number",
+                      "null"
+                    ]
                   },
                   "injuryStatus": {
-                    "type": "string",
-                    "description": "Current injury designation where the platform reports one. ESPN sends mapped words (e.g. Questionable, Out, IR) and may send Active for a healthy player. Sleeper sends its own code verbatim (e.g. Questionable, Doubtful, Out, IR, PUP, Sus, GTD, DTD) and omits the field when the player has no designation. Translate codes into plain language. Yahoo reports its designation in status instead. Present-day only; it can lag breaking news"
+                    "description": "Current injury designation where the platform reports one. ESPN sends mapped words (e.g. Questionable, Out, IR) and may send Active for a healthy player. Sleeper sends its own code verbatim (e.g. Questionable, Doubtful, Out, IR, PUP, Sus, GTD, DTD) and omits the field when the player has no designation. Translate codes into plain language. Yahoo reports its designation in status instead. Present-day only; it can lag breaking news",
+                    "type": "string"
                   },
                   "seasonPoints": {
+                    "description": "ESPN league-scored actual season total; null when unavailable",
                     "type": [
                       "number",
                       "null"
-                    ],
-                    "description": "ESPN league-scored actual season total; null when unavailable"
+                    ]
                   },
                   "pointsPerGame": {
+                    "description": "ESPN league-scored actual season average; null when unavailable",
                     "type": [
                       "number",
                       "null"
-                    ],
-                    "description": "ESPN league-scored actual season average; null when unavailable"
+                    ]
                   },
                   "projectedSeasonPoints": {
+                    "description": "ESPN league-scored projected season total, not a weekly projection; null when unavailable",
                     "type": [
                       "number",
                       "null"
-                    ],
-                    "description": "ESPN league-scored projected season total, not a weekly projection; null when unavailable"
+                    ]
                   },
                   "injuryBodyPart": {
-                    "type": "string",
-                    "description": "Sleeper only: the injured body part (e.g. Knee), present only alongside injuryStatus"
+                    "description": "Sleeper only: the injured body part (e.g. Knee), present only alongside injuryStatus",
+                    "type": "string"
                   },
                   "eligiblePositions": {
+                    "description": "Positions the player is eligible at. ESPN: lineup-slot labels, which can include flex labels such as UTIL, and an empty array when ESPN lists no usable slot. Sleeper: its fantasy positions, such as [\"RB\", \"WR\"], omitted when Sleeper sends none",
                     "type": "array",
                     "items": {
                       "type": "string"
-                    },
-                    "description": "Positions the player is eligible at. ESPN: lineup-slot labels, which can include flex labels such as UTIL, and an empty array when ESPN lists no usable slot. Sleeper: its fantasy positions, such as [\"RB\", \"WR\"], omitted when Sleeper sends none"
+                    }
                   }
                 },
-                "additionalProperties": true
-              },
-              "description": "ESPN/Yahoo available-player entries"
+                "additionalProperties": {}
+              }
             },
             "platform": {
               "type": "string"
@@ -1039,29 +1126,149 @@
               "type": "number"
             },
             "players": {
+              "description": "Sleeper available-player entries",
               "type": "array",
               "items": {
-                "$ref": "#/properties/data/properties/freeAgents/items"
-              },
-              "description": "Sleeper available-player entries"
+                "type": "object",
+                "properties": {
+                  "acquisitionState": {
+                    "description": "Canonical acquisition state: \"free_agent\", \"waivers\", or null when the platform could not determine the subtype. ESPN and Yahoo entries carry this field; Yahoo keeps null rows even when capabilities.acquisitionState is false. Sleeper omits it",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "free_agent",
+                          "waivers"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "waiverClearsAt": {
+                    "description": "ISO 8601 waiver clear time (ESPN only, only on rows whose acquisitionState is \"waivers\" with a valid provider timestamp)",
+                    "type": "string"
+                  },
+                  "waiverDate": {
+                    "description": "Yahoo only: waiver clear calendar date in YYYY-MM-DD form, only on waiver rows. Yahoo provides no time or timezone, so do not treat it as an exact clearance instant",
+                    "type": "string"
+                  },
+                  "id": {
+                    "description": "Platform-local player id as a string",
+                    "type": "string"
+                  },
+                  "team": {
+                    "description": "Real-life club abbreviation, null when the platform lists none",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "percentOwned": {
+                    "description": "ESPN-wide roster rate or Yahoo-wide market rate; null/absent when the provider reports none",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "percentStarted": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "description": "Legacy: ESPN acquisition enum (prefer acquisitionState); on Yahoo an unrelated player designation",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "ownershipType": {
+                    "description": "Yahoo provider-native ownership subtype (prefer acquisitionState); null when Yahoo omitted it or returned an unsupported value",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "freeagents",
+                          "waivers"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "waiverProcessDate": {
+                    "description": "Legacy epoch-ms form of waiverClearsAt",
+                    "type": [
+                      "string",
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "injuryStatus": {
+                    "description": "Current injury designation where the platform reports one. ESPN sends mapped words (e.g. Questionable, Out, IR) and may send Active for a healthy player. Sleeper sends its own code verbatim (e.g. Questionable, Doubtful, Out, IR, PUP, Sus, GTD, DTD) and omits the field when the player has no designation. Translate codes into plain language. Yahoo reports its designation in status instead. Present-day only; it can lag breaking news",
+                    "type": "string"
+                  },
+                  "seasonPoints": {
+                    "description": "ESPN league-scored actual season total; null when unavailable",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "pointsPerGame": {
+                    "description": "ESPN league-scored actual season average; null when unavailable",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "projectedSeasonPoints": {
+                    "description": "ESPN league-scored projected season total, not a weekly projection; null when unavailable",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "injuryBodyPart": {
+                    "description": "Sleeper only: the injured body part (e.g. Knee), present only alongside injuryStatus",
+                    "type": "string"
+                  },
+                  "eligiblePositions": {
+                    "description": "Positions the player is eligible at. ESPN: lineup-slot labels, which can include flex labels such as UTIL, and an empty array when ESPN lists no usable slot. Sleeper: its fantasy positions, such as [\"RB\", \"WR\"], omitted when Sleeper sends none",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": {}
+              }
             },
             "pagination": {
+              "description": "Present only when offset opts into compact inventory paging",
               "type": "object",
               "properties": {
                 "offset": {
                   "type": "integer",
                   "minimum": 0,
+                  "maximum": 9007199254740991,
                   "description": "Requested inventory-page offset"
                 },
                 "returnedRows": {
                   "type": "integer",
                   "minimum": 0,
+                  "maximum": 9007199254740991,
                   "description": "Rows actually returned in this page"
                 },
                 "nextOffset": {
+                  "description": "Use as offset for the next inventory page when present",
                   "type": "integer",
                   "minimum": 0,
-                  "description": "Use as offset for the next inventory page when present"
+                  "maximum": 9007199254740991
                 },
                 "endReached": {
                   "type": "boolean",
@@ -1079,8 +1286,7 @@
                 "endReached",
                 "consistency"
               ],
-              "additionalProperties": true,
-              "description": "Present only when offset opts into compact inventory paging"
+              "additionalProperties": {}
             },
             "warning": {
               "type": "string"
@@ -1095,7 +1301,7 @@
             "capabilities",
             "ownershipScope"
           ],
-          "additionalProperties": true,
+          "additionalProperties": {},
           "description": "Platform envelope. Field availability varies by platform (ESPN, Yahoo, Sleeper); absent fields are not provided by that platform."
         }
       },
@@ -1103,8 +1309,7 @@
         "success",
         "data"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -1120,6 +1325,7 @@
     "title": "League Context",
     "description": "With session context established, call this once per league the first time this chat works with that league, before the requested standings, matchup, roster, free-agent, player, transaction, or draft tool, then reuse it for later questions about that league. A usable successful get_user_session result from earlier in this chat satisfies that prerequisite; do not repeat it just to satisfy this ordering. Skip it only when answering from session data alone or branching to get_ancient_history. This provides the baseline league context for analysis: league name, settings, scoring type, roster configuration, and team/owner context, plus schedule or season-window metadata when the platform provides it. Keeper and draft-format fields are additive and platform-dependent; never assume one provider's fields exist on another. ESPN adds keeperSettings (keeperCount, keeperCountFuture, keeperOrderType, keeperDeadlineDate) and isKeeperLeague when ESPN reports a keeper count, plus per-team keeperPlayerIds and futureKeeperPlayerIds as raw ESPN player IDs with no name resolution. Sleeper adds leagueFormat, whose typeRaw is an undocumented Sleeper convention that must not be read on its own as a redraft, keeper, dynasty, or guillotine signal, plus per-team keepers as raw Sleeper player IDs. When its settings request succeeds, Yahoo may add draftType, isAuctionDraft, canTradeDraftPicks, waiverType, waiverRule, waiverTime (days), postDraftPlayers, cantCutList, and maxWeeklyAdds; it also adds weeklyDeadline from league metadata. Yahoo statModifiers returns configured per-stat scoring values and may add bonuses as Yahoo's configured target/points rule pairs. These are league rules, not calculated player awards; do not infer whether a target is inclusive or whether multiple tiers stack. Yahoo's rule and deadline codes are raw provider values with no complete published code list: do not decode them, call weeklyDeadline a lock time, or infer that a particular move is legal. The settings fields are omitted, with a warning, when Yahoo's settings request fails. Yahoo exposes no keeper-cost rule. Sleeper futureDraftRounds describes the configured round count for future drafts; use get_draft.draft.rounds for the selected draft's actual round count. When fanning out across multiple leagues, call this once per league. The exact team fields vary by platform but all include ownerName. Use values from get_user_session. Read-only.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "platform": {
@@ -1156,8 +1362,7 @@
         "league_id",
         "season_year"
       ],
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": true,
@@ -1181,6 +1386,7 @@
       "openai/toolInvocation/invoked": "League info ready"
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -1213,17 +1419,17 @@
             "scoringSettings": {
               "type": "object",
               "properties": {},
-              "additionalProperties": true
+              "additionalProperties": {}
             },
             "roster": {
               "type": "object",
               "properties": {},
-              "additionalProperties": true
+              "additionalProperties": {}
             },
             "schedule": {
               "type": "object",
               "properties": {},
-              "additionalProperties": true
+              "additionalProperties": {}
             },
             "leagueKey": {
               "type": "string"
@@ -1247,16 +1453,17 @@
               "type": "string"
             },
             "scoringFormat": {
+              "description": "Yahoo: sport-aware reading of scoringType. Yahoo's raw \"head\" means points in football and categories in other sports",
               "type": "string",
               "enum": [
                 "points",
                 "categories",
                 "roto",
                 "unknown"
-              ],
-              "description": "Yahoo: sport-aware reading of scoringType. Yahoo's raw \"head\" means points in football and categories in other sports"
+              ]
             },
             "statModifiers": {
+              "description": "Yahoo configured per-stat scoring values, with optional configured bonus threshold and point rules when Yahoo reports a fully usable bonus list",
               "type": "array",
               "items": {
                 "type": "object",
@@ -1280,6 +1487,7 @@
                     ]
                   },
                   "bonuses": {
+                    "description": "Yahoo configured bonus threshold and point pairs for this stat; league rules, not calculated awards",
                     "type": "array",
                     "items": {
                       "type": "object",
@@ -1295,9 +1503,8 @@
                         "target",
                         "points"
                       ],
-                      "additionalProperties": true
-                    },
-                    "description": "Yahoo configured bonus threshold and point pairs for this stat; league rules, not calculated awards"
+                      "additionalProperties": {}
+                    }
                   }
                 },
                 "required": [
@@ -1306,9 +1513,8 @@
                   "name",
                   "displayName"
                 ],
-                "additionalProperties": true
-              },
-              "description": "Yahoo configured per-stat scoring values, with optional configured bonus threshold and point rules when Yahoo reports a fully usable bonus list"
+                "additionalProperties": {}
+              }
             },
             "currentWeek": {
               "type": [
@@ -1335,33 +1541,34 @@
               "type": "string"
             },
             "waiverType": {
-              "type": "string",
-              "description": "Yahoo raw waiver-system code; Yahoo does not publish a complete code list, so do not decode or infer a rule from it alone"
+              "description": "Yahoo raw waiver-system code; Yahoo does not publish a complete code list, so do not decode or infer a rule from it alone",
+              "type": "string"
             },
             "waiverRule": {
-              "type": "string",
-              "description": "Yahoo raw waiver-rule code; Yahoo does not publish a complete code list, so do not decode or infer a rule from it alone"
+              "description": "Yahoo raw waiver-rule code; Yahoo does not publish a complete code list, so do not decode or infer a rule from it alone",
+              "type": "string"
             },
             "waiverTime": {
-              "type": "number",
-              "description": "Yahoo waiver delay in days when Yahoo reports a usable value"
+              "description": "Yahoo waiver delay in days when Yahoo reports a usable value",
+              "type": "number"
             },
             "postDraftPlayers": {
-              "type": "string",
-              "description": "Yahoo raw post-draft player-acquisition code; do not decode it without Yahoo evidence"
+              "description": "Yahoo raw post-draft player-acquisition code; do not decode it without Yahoo evidence",
+              "type": "string"
             },
             "cantCutList": {
-              "type": "string",
-              "description": "Yahoo raw undroppable-list setting code; it does not itself identify every player that cannot be dropped"
+              "description": "Yahoo raw undroppable-list setting code; it does not itself identify every player that cannot be dropped",
+              "type": "string"
             },
             "maxWeeklyAdds": {
+              "description": "Yahoo maximum weekly adds when Yahoo reports a non-negative integer; absent does not establish no limit",
               "type": "integer",
               "minimum": 0,
-              "description": "Yahoo maximum weekly adds when Yahoo reports a non-negative integer; absent does not establish no limit"
+              "maximum": 9007199254740991
             },
             "weeklyDeadline": {
-              "type": "string",
-              "description": "Yahoo raw weekly-deadline code. It is not a lineup lock time and does not establish whether a particular move is legal"
+              "description": "Yahoo raw weekly-deadline code. It is not a lineup lock time and does not establish whether a particular move is legal",
+              "type": "string"
             },
             "sport": {
               "type": "string"
@@ -1396,6 +1603,7 @@
             },
             "status": {},
             "teams": {
+              "description": "Team/owner context; exact team fields vary by platform but all include ownerName",
               "type": "array",
               "items": {
                 "type": "object",
@@ -1407,12 +1615,11 @@
                     ]
                   }
                 },
-                "additionalProperties": true
-              },
-              "description": "Team/owner context; exact team fields vary by platform but all include ownerName"
+                "additionalProperties": {}
+              }
             }
           },
-          "additionalProperties": true,
+          "additionalProperties": {},
           "description": "Platform envelope. Field availability varies by platform (ESPN, Yahoo, Sleeper); absent fields are not provided by that platform."
         }
       },
@@ -1420,8 +1627,7 @@
         "success",
         "data"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -1437,6 +1643,7 @@
     "title": "League Matchups",
     "description": "Get matchups/scoreboard for a specific week or the current week. Yahoo and ESPN head-to-head category leagues (Each Category and Most Categories), in baseball, basketball, and hockey, return per-category rows and a categoryScore of wins/losses/ties per side. On those leagues the side total is a category count or null rather than fantasy points. In a Most Categories league, categoryScore stays the per-category tally. On Yahoo (scoringTypeRaw \"headone\"), the side that wins more categories takes the single weekly result, and equal category wins is a tie. On ESPN (scoringType \"H2H_MOST_CATEGORIES\"), use the provider-reported matchup winner for that weekly result rather than deriving it; it can stay UNDECIDED mid-period. Before the provider reports a final winner, describe categoryScore and categories only as the current category lead, not the final weekly result. ESPN category rows include only the stats that league scores. ESPN football and Sleeper stay on fantasy points and do not return category rows. A null categoryScore, value, or result means the provider did not report it; never infer one. ESPN points matchups: totalPoints stays 0 until ESPN decides the matchup, so read each side's currentPoints for the score so far; winner stays UNDECIDED until then. Yahoo matchups: projectedPoints is the sum of each starter's pregame projection for the period. It does not add points as they are scored, so mid-period it routinely differs from points and can sit below the current score; that gap is expected and does not mean the data is stale or inconsistent. When liveProjectedPoints is present it is Yahoo's live projected final; prefer it. winProbability, when present, is Yahoo's estimated chance (0 to 1) that side wins. status reports upcoming, in_progress, or final; Yahoo's winner appears only when status is final. A missing optional field means Yahoo did not provide a usable value; never infer one. Sleeper returns no projection. Sleeper status reports upcoming, in_progress, or final for the requested week; in_progress lasts from before kickoff until Sleeper rolls to the next week, so it does not prove games have started. Sleeper's winner appears only when status is final; mid-week, points are the live score, not a result. Sleeper keeps every provider matchup record: scheduleShape reports \"no_h2h_pairings\" with reason \"unknown\" when numeric groups are present but none form an H2H pair, and \"unpublished_or_unavailable\" when there are no usable pairing IDs. When it has both pairs and unpaired records, it reports the unpaired count. A singleton has away:null and is never labelled a bye or used to infer league format. To request compact player scores for one selected matchup, use detail: \"players\" with an explicit week and team_id; this is currently ESPN football only and only for season_year 2018 or later. Any other platform, sport, or earlier season returns MATCHUP_DETAIL_UNSUPPORTED. Set include_projections: true with player detail to add each player's nullable ESPN weekly projectedPoints. These are provider values retrieved now for the selected week; historical values are not verified original pregame snapshots and cannot be used as an accuracy backtest. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so the model already knows the league's team names, owner/team mapping, and league context before interpreting the matchup. For multi-league comparisons, call once per league. Read-only.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "platform": {
@@ -1467,22 +1674,23 @@
           "description": "Season start year — use the season_year returned by get_user_session for this league; only pass an older year when the user explicitly asks about a past season. Basketball and hockey use the start year of a cross-year season (2024 = the 2024-25 season); football and baseball use the single season year (2025 = the 2025 season)."
         },
         "week": {
+          "description": "Week number (optional, must be ≥ 1, defaults to current week)",
           "type": "integer",
           "minimum": 1,
-          "description": "Week number (optional, must be ≥ 1, defaults to current week)"
+          "maximum": 9007199254740991
         },
         "team_id": {
-          "type": "string",
-          "description": "Required with detail: \"players\" to select one matchup; do not provide for summary mode."
+          "description": "Required with detail: \"players\" to select one matchup; do not provide for summary mode.",
+          "type": "string"
         },
         "detail": {
+          "description": "Opt-in compact player detail for one selected ESPN football matchup, season_year 2018 or later only; requires week and team_id.",
           "type": "string",
-          "const": "players",
-          "description": "Opt-in compact player detail for one selected ESPN football matchup, season_year 2018 or later only; requires week and team_id."
+          "const": "players"
         },
         "include_projections": {
-          "type": "boolean",
-          "description": "With detail: players only, add nullable ESPN weekly player projectedPoints. Historical values are retrieved now, not verified original pregame snapshots."
+          "description": "With detail: players only, add nullable ESPN weekly player projectedPoints. Historical values are retrieved now, not verified original pregame snapshots.",
+          "type": "boolean"
         }
       },
       "required": [
@@ -1491,8 +1699,7 @@
         "league_id",
         "season_year"
       ],
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": true,
@@ -1516,6 +1723,7 @@
       "openai/toolInvocation/invoked": "Matchups ready"
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -1566,11 +1774,11 @@
                 "type": "object",
                 "properties": {
                   "matchupId": {
+                    "description": "Provider matchup grouping id, or null when Sleeper did not publish a usable id",
                     "type": [
                       "number",
                       "null"
-                    ],
-                    "description": "Provider matchup grouping id, or null when Sleeper did not publish a usable id"
+                    ]
                   },
                   "home": {
                     "anyOf": [
@@ -1607,11 +1815,11 @@
                                   ]
                                 },
                                 "projectedPoints": {
+                                  "description": "ESPN football: provider projection retrieved now for the selected week; null when unavailable. Historical values are not verified pregame snapshots and cannot establish projection accuracy.",
                                   "type": [
                                     "number",
                                     "null"
-                                  ],
-                                  "description": "ESPN football: provider projection retrieved now for the selected week; null when unavailable. Historical values are not verified pregame snapshots and cannot establish projection accuracy."
+                                  ]
                                 }
                               },
                               "required": [
@@ -1621,34 +1829,34 @@
                                 "started",
                                 "points"
                               ],
-                              "additionalProperties": true
+                              "additionalProperties": {}
                             }
                           },
                           "currentPoints": {
+                            "description": "ESPN points matchups: the score so far. ESPN's totalPoints stays 0 until the matchup is decided, so read this instead; it equals totalPoints once decided. Null on ESPN category leagues",
                             "type": [
                               "number",
                               "null"
-                            ],
-                            "description": "ESPN points matchups: the score so far. ESPN's totalPoints stays 0 until the matchup is decided, so read this instead; it equals totalPoints once decided. Null on ESPN category leagues"
+                            ]
                           },
                           "projectedPoints": {
-                            "type": "number",
-                            "description": "Yahoo: sum of the starters' pregame projections for the period; it does not add points as they are scored, so a gap from points mid-period is expected, not stale data"
+                            "description": "Yahoo: sum of the starters' pregame projections for the period; it does not add points as they are scored, so a gap from points mid-period is expected, not stale data",
+                            "type": "number"
                           },
                           "liveProjectedPoints": {
-                            "type": "number",
-                            "description": "Yahoo, when sent: live projected final for the period; prefer it over projectedPoints"
+                            "description": "Yahoo, when sent: live projected final for the period; prefer it over projectedPoints",
+                            "type": "number"
                           },
                           "winProbability": {
-                            "type": "number",
-                            "description": "Yahoo, when sent: estimated chance (0-1) that this side wins"
+                            "description": "Yahoo, when sent: estimated chance (0-1) that this side wins",
+                            "type": "number"
                           },
                           "gamesRemaining": {
-                            "type": "number",
-                            "description": "Yahoo, when sent: games this side has left in the period"
+                            "description": "Yahoo, when sent: games this side has left in the period",
+                            "type": "number"
                           }
                         },
-                        "additionalProperties": true
+                        "additionalProperties": {}
                       },
                       {
                         "type": "null"
@@ -1658,7 +1866,80 @@
                   "away": {
                     "anyOf": [
                       {
-                        "$ref": "#/properties/data/properties/matchups/items/properties/home/anyOf/0"
+                        "type": "object",
+                        "properties": {
+                          "players": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "playerId": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "lineupSlot": {
+                                  "type": "string"
+                                },
+                                "started": {
+                                  "type": [
+                                    "boolean",
+                                    "null"
+                                  ]
+                                },
+                                "points": {
+                                  "type": [
+                                    "number",
+                                    "null"
+                                  ]
+                                },
+                                "projectedPoints": {
+                                  "description": "ESPN football: provider projection retrieved now for the selected week; null when unavailable. Historical values are not verified pregame snapshots and cannot establish projection accuracy.",
+                                  "type": [
+                                    "number",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "playerId",
+                                "name",
+                                "lineupSlot",
+                                "started",
+                                "points"
+                              ],
+                              "additionalProperties": {}
+                            }
+                          },
+                          "currentPoints": {
+                            "description": "ESPN points matchups: the score so far. ESPN's totalPoints stays 0 until the matchup is decided, so read this instead; it equals totalPoints once decided. Null on ESPN category leagues",
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "projectedPoints": {
+                            "description": "Yahoo: sum of the starters' pregame projections for the period; it does not add points as they are scored, so a gap from points mid-period is expected, not stale data",
+                            "type": "number"
+                          },
+                          "liveProjectedPoints": {
+                            "description": "Yahoo, when sent: live projected final for the period; prefer it over projectedPoints",
+                            "type": "number"
+                          },
+                          "winProbability": {
+                            "description": "Yahoo, when sent: estimated chance (0-1) that this side wins",
+                            "type": "number"
+                          },
+                          "gamesRemaining": {
+                            "description": "Yahoo, when sent: games this side has left in the period",
+                            "type": "number"
+                          }
+                        },
+                        "additionalProperties": {}
                       },
                       {
                         "type": "null"
@@ -1666,26 +1947,27 @@
                     ]
                   },
                   "status": {
+                    "description": "Yahoo: matchup state; absent when Yahoo did not report a recognized one. Sleeper: state of the requested week; absent when it could not be determined from Sleeper's league and season state. Sleeper's in_progress covers its whole current week, from before kickoff until Sleeper rolls to the next week",
                     "type": "string",
                     "enum": [
                       "upcoming",
                       "in_progress",
                       "final"
-                    ],
-                    "description": "Yahoo: matchup state; absent when Yahoo did not report a recognized one. Sleeper: state of the requested week; absent when it could not be determined from Sleeper's league and season state. Sleeper's in_progress covers its whole current week, from before kickoff until Sleeper rolls to the next week"
+                    ]
                   },
                   "winner": {
+                    "description": "Yahoo and Sleeper: home, away, or tie, present only when status is final. ESPN: its own HOME, AWAY, TIE, or UNDECIDED, which stays UNDECIDED until the matchup is decided",
                     "type": [
                       "string",
                       "null"
-                    ],
-                    "description": "Yahoo and Sleeper: home, away, or tie, present only when status is final. ESPN: its own HOME, AWAY, TIE, or UNDECIDED, which stays UNDECIDED until the matchup is decided"
+                    ]
                   }
                 },
-                "additionalProperties": true
+                "additionalProperties": {}
               }
             },
             "scheduleShape": {
+              "description": "Sleeper schedule-shape evidence. A singleton is not labelled a bye because the provider did not establish why it was unpaired.",
               "type": "object",
               "properties": {
                 "status": {
@@ -1713,11 +1995,10 @@
                 "h2hPairingsReturned",
                 "unpairedRosterCount"
               ],
-              "additionalProperties": true,
-              "description": "Sleeper schedule-shape evidence. A singleton is not labelled a bye because the provider did not establish why it was unpaired."
+              "additionalProperties": {}
             }
           },
-          "additionalProperties": true,
+          "additionalProperties": {},
           "description": "Platform envelope. Field availability varies by platform (ESPN, Yahoo, Sleeper); absent fields are not provided by that platform."
         }
       },
@@ -1725,8 +2006,7 @@
         "success",
         "data"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -1742,6 +2022,7 @@
     "title": "Search Players",
     "description": "Search for player identity by name. Always returns identity fields, but ownership context varies by platform. ESPN and Yahoo return market/global ownership and can also populate league ownership fields when credentials and league context are available. ESPN football also adds seasonPoints and pointsPerGame when a selected league is available: these are ESPN's actual-season applied values under that league's scoring, never a Flaim calculation. A real 0 is retained. Null means league scoring was unavailable or ESPN did not return an applied value; for unrostered results it can also mean the player was outside ESPN's bounded 100-player availability pool, so use get_free_agents before treating a null as a scoring fact. Sleeper always evaluates league ownership against every current roster in the selected league, except during an active draft, when this tool returns an error instead of an answer, since draft picks aren't yet reflected on rosters; if the league, rosters, or users can't be loaded for another reason, the call still succeeds with every league_* field null plus a SLEEPER_OWNERSHIP_UNAVAILABLE warning. Sleeper adds a Sleeper-only league_team_id (the Sleeper roster id, or null); its market/global ownership stays unavailable regardless (ownership_scope=\"unavailable\", market_percent_owned=null) — league_team_id is league ownership, not market data. For a selected active league, use established session context (call get_user_session only if needed), then get_league_info, if this chat has not already loaded it for that league, so league-specific ownership and team names can be resolved. League ownership fields: league_status (\"ROSTERED\" = on a team, \"FREE_AGENT\" = unrostered in this league, null = ownership could not be resolved, for example because credentials or rosters were unavailable, the player result carried no usable id, or Sleeper rostering was ambiguous), league_team_name (fantasy team name if rostered), league_owner_name (team owner if rostered). FREE_AGENT is an ownership fact from a roster scan, not an acquisition guarantee — it says nothing about waiver state, so never turn it into pickup advice; get_free_agents is what reports players available to acquire. Trust a non-null league_status directly — null team/owner fields alongside FREE_AGENT are expected, not a signal to verify. Fall back to get_roster only when league_status itself is absent or null. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. Use values from get_user_session. Read-only.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "query": {
@@ -1777,12 +2058,12 @@
           "description": "Season start year — use the season_year returned by get_user_session for this league; only pass an older year when the user explicitly asks about a past season. Basketball and hockey use the start year of a cross-year season (2024 = the 2024-25 season); football and baseball use the single season year (2025 = the 2025 season)."
         },
         "position": {
-          "type": "string",
-          "description": "Filter by position (e.g., \"QB\", \"RB\", \"SP\", \"C\"). Default: ALL"
+          "description": "Filter by position (e.g., \"QB\", \"RB\", \"SP\", \"C\"). Default: ALL",
+          "type": "string"
         },
         "count": {
-          "type": "number",
-          "description": "Maximum number of players to return (default: 10, max: 25)"
+          "description": "Maximum number of players to return (default: 10, max: 25)",
+          "type": "number"
         }
       },
       "required": [
@@ -1792,8 +2073,7 @@
         "league_id",
         "season_year"
       ],
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": true,
@@ -1817,6 +2097,7 @@
       "openai/toolInvocation/invoked": "Players ready"
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -1876,18 +2157,18 @@
                     "type": "string"
                   },
                   "league_status": {
+                    "description": "ROSTERED, FREE_AGENT, or null when ownership could not be resolved, for example because credentials or rosters were unavailable, the player result carried no usable id, or Sleeper rostering was ambiguous",
                     "type": [
                       "string",
                       "null"
-                    ],
-                    "description": "ROSTERED, FREE_AGENT, or null when ownership could not be resolved, for example because credentials or rosters were unavailable, the player result carried no usable id, or Sleeper rostering was ambiguous"
+                    ]
                   },
                   "league_team_id": {
+                    "description": "Sleeper only: the roster id owning the player; null when no single owner was resolved, which includes both a free agent and ownership that could not be resolved uniquely. league_status is the confirmation: FREE_AGENT means unrostered, null means unresolved",
                     "type": [
                       "string",
                       "null"
-                    ],
-                    "description": "Sleeper only: the roster id owning the player; null when no single owner was resolved, which includes both a free agent and ownership that could not be resolved uniquely. league_status is the confirmation: FREE_AGENT means unrostered, null means unresolved"
+                    ]
                   },
                   "league_team_name": {
                     "type": [
@@ -1902,43 +2183,43 @@
                     ]
                   },
                   "seasonPoints": {
+                    "description": "ESPN football only: ESPN-computed actual-season points under the selected league scoring; null when league scoring was unavailable, ESPN did not return an applied value, or an unrostered result was outside its bounded availability pool",
                     "type": [
                       "number",
                       "null"
-                    ],
-                    "description": "ESPN football only: ESPN-computed actual-season points under the selected league scoring; null when league scoring was unavailable, ESPN did not return an applied value, or an unrostered result was outside its bounded availability pool"
+                    ]
                   },
                   "pointsPerGame": {
+                    "description": "ESPN football only: ESPN-computed actual-season points per game under the selected league scoring; null under the same conditions as seasonPoints",
                     "type": [
                       "number",
                       "null"
-                    ],
-                    "description": "ESPN football only: ESPN-computed actual-season points per game under the selected league scoring; null under the same conditions as seasonPoints"
+                    ]
                   },
                   "injuryStatus": {
-                    "type": "string",
-                    "description": "Sleeper only: current injury designation, Sleeper's own code verbatim (e.g. Questionable, Doubtful, Out, IR, PUP, Sus, GTD, DTD), absent when the player has none; translate codes into plain language. Present-day only; it can lag breaking news"
+                    "description": "Sleeper only: current injury designation, Sleeper's own code verbatim (e.g. Questionable, Doubtful, Out, IR, PUP, Sus, GTD, DTD), absent when the player has none; translate codes into plain language. Present-day only; it can lag breaking news",
+                    "type": "string"
                   },
                   "injuryBodyPart": {
-                    "type": "string",
-                    "description": "Sleeper only: the injured body part (e.g. Knee), present only alongside injuryStatus"
+                    "description": "Sleeper only: the injured body part (e.g. Knee), present only alongside injuryStatus",
+                    "type": "string"
                   },
                   "eligiblePositions": {
+                    "description": "Sleeper only: the player's fantasy-eligible positions, such as [\"RB\", \"WR\"]; absent when Sleeper sends none",
                     "type": "array",
                     "items": {
                       "type": "string"
-                    },
-                    "description": "Sleeper only: the player's fantasy-eligible positions, such as [\"RB\", \"WR\"]; absent when Sleeper sends none"
+                    }
                   }
                 },
-                "additionalProperties": true
+                "additionalProperties": {}
               }
             },
             "warning": {
               "type": "string"
             }
           },
-          "additionalProperties": true,
+          "additionalProperties": {},
           "description": "Platform envelope. Field availability varies by platform (ESPN, Yahoo, Sleeper); absent fields are not provided by that platform."
         }
       },
@@ -1946,8 +2227,7 @@
         "success",
         "data"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -1963,6 +2243,7 @@
     "title": "Team Roster",
     "description": "Get roster details for a specific team, current by default and historical on request. Exact payload varies by platform: ESPN and Yahoo return player entries with lineup/position context, while Sleeper returns starters, bench, reserve, taxi, and record metadata for the selected roster. Keeper fields are additive and platform-dependent; never assume one provider's keeper fields or units exist on another. ESPN adds per-player keeperValue and keeperValueFuture plus one response-level keeperValueUnit of auction_dollars or draft_round, omitted rather than guessed when ESPN's draft type does not determine it; a historical snapshot withholds keeperValueFuture and flags keeperValueFutureAvailable false. Sleeper resolves keepers to player entries on the current roster only, passing the list through as Sleeper sends it; an empty or null list does not show that the league has no keepers. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. On a current Yahoo roster only, entries may also add isUndroppable and isEditable. These are Yahoo player flags, not comprehensive transaction or lineup-lock rules: isEditable does not provide a lock time or guarantee that an add, drop, or lineup move is legal. Current Yahoo entries may also add eligiblePositions from Yahoo metadata, preserving provider-native codes and order without filtering or mapping to another platform's labels. This is separate from the assigned slot and does not prove that a move is legal. Honor codes Yahoo explicitly lists, including flex codes; do not infer additional eligibility. Missing, empty, or malformed eligibility is omitted; an absent eligiblePositions means unknown, not ineligible. Historical Yahoo snapshots omit eligiblePositions and both flags. Historical snapshots: pass week for football (all platforms) and Sleeper basketball (matchup week), or as_of_date (YYYY-MM-DD) for ESPN/Yahoo baseball, basketball, and hockey, never both. An invalid selector returns a corrective error naming the right one. Every response includes a snapshot block identifying what was returned (current vs week vs date); historical responses may add limitation flags (acquisitionMetadataAvailable, reserveAndTaxiClassificationAvailable) when provider history omits those details. A current Sleeper roster sets limitations.playerStatusAvailable false when it could not confirm the league is live this season and so withheld injury designations; a missing injuryStatus then does not mean the player is healthy. For \"roster during matchup week N\" questions in daily sports, ask the user for a specific date rather than guessing. One matchup spans several daily rosters. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so the model already knows the league's team names, owner/team mapping, league settings, and roster context before interpreting this roster. Requires authentication except on Sleeper's public API. Read-only.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "platform": {
@@ -1993,16 +2274,16 @@
           "description": "Season start year — use the season_year returned by get_user_session for this league; only pass an older year when the user explicitly asks about a past season. Basketball and hockey use the start year of a cross-year season (2024 = the 2024-25 season); football and baseball use the single season year (2025 = the 2025 season)."
         },
         "team_id": {
-          "type": "string",
-          "description": "Team ID for the target roster. Recommended for all platforms; required on Yahoo and for historical Sleeper rosters. If omitted, platform behavior varies and may not resolve to the user's team."
+          "description": "Team ID for the target roster. Recommended for all platforms; required on Yahoo and for historical Sleeper rosters. If omitted, platform behavior varies and may not resolve to the user's team.",
+          "type": "string"
         },
         "week": {
-          "type": "number",
-          "description": "Historical weekly roster snapshot (positive integer). Football on all platforms, plus Sleeper basketball (matchup week). Not valid for ESPN/Yahoo daily sports — use as_of_date there. Omit for the current roster; pass at most one of week or as_of_date."
+          "description": "Historical weekly roster snapshot (positive integer). Football on all platforms, plus Sleeper basketball (matchup week). Not valid for ESPN/Yahoo daily sports — use as_of_date there. Omit for the current roster; pass at most one of week or as_of_date.",
+          "type": "number"
         },
         "as_of_date": {
-          "type": "string",
-          "description": "Historical calendar-day roster snapshot in YYYY-MM-DD format. ESPN and Yahoo baseball, basketball, and hockey only — football and Sleeper use week. Omit for the current roster; pass at most one of week or as_of_date."
+          "description": "Historical calendar-day roster snapshot in YYYY-MM-DD format. ESPN and Yahoo baseball, basketball, and hockey only — football and Sleeper use week. Omit for the current roster; pass at most one of week or as_of_date.",
+          "type": "string"
         }
       },
       "required": [
@@ -2011,8 +2292,7 @@
         "league_id",
         "season_year"
       ],
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": true,
@@ -2036,6 +2316,7 @@
       "openai/toolInvocation/invoked": "Roster ready"
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -2075,6 +2356,7 @@
               ]
             },
             "snapshot": {
+              "description": "Identifies what was returned: current, week, or date",
               "type": "object",
               "properties": {
                 "type": {
@@ -2084,42 +2366,41 @@
               "required": [
                 "type"
               ],
-              "additionalProperties": true,
-              "description": "Identifies what was returned: current, week, or date"
+              "additionalProperties": {}
             },
             "roster": {
+              "description": "ESPN roster entries",
               "type": "array",
               "items": {
                 "type": "object",
                 "properties": {},
-                "additionalProperties": true
-              },
-              "description": "ESPN roster entries"
+                "additionalProperties": {}
+              }
             },
             "players": {
+              "description": "Yahoo roster entries. eligiblePositions, isUndroppable and isEditable, when present, apply only to a current roster; historical snapshots omit them",
               "type": "array",
               "items": {
                 "type": "object",
                 "properties": {
                   "eligiblePositions": {
+                    "description": "Yahoo current-roster provider-native eligible position codes, unfiltered and in provider order. Omitted when missing, empty, malformed, or historical; absence means unknown, not ineligible. Honor codes Yahoo explicitly lists, including flex codes; do not infer additional eligibility or move legality. Separate from the assigned slot",
                     "type": "array",
                     "items": {
                       "type": "string"
-                    },
-                    "description": "Yahoo current-roster provider-native eligible position codes, unfiltered and in provider order. Omitted when missing, empty, malformed, or historical; absence means unknown, not ineligible. Honor codes Yahoo explicitly lists, including flex codes; do not infer additional eligibility or move legality. Separate from the assigned slot"
+                    }
                   },
                   "isUndroppable": {
-                    "type": "boolean",
-                    "description": "Yahoo current-roster player flag. It reports Yahoo's undroppable status for this player, not every condition that may affect a transaction"
+                    "description": "Yahoo current-roster player flag. It reports Yahoo's undroppable status for this player, not every condition that may affect a transaction",
+                    "type": "boolean"
                   },
                   "isEditable": {
-                    "type": "boolean",
-                    "description": "Yahoo current-roster player flag for whether Yahoo reports the player as editable. It is not a lock time and does not guarantee a particular add, drop, or lineup move is legal"
+                    "description": "Yahoo current-roster player flag for whether Yahoo reports the player as editable. It is not a lock time and does not guarantee a particular add, drop, or lineup move is legal",
+                    "type": "boolean"
                   }
                 },
-                "additionalProperties": true
-              },
-              "description": "Yahoo roster entries. eligiblePositions, isUndroppable and isEditable, when present, apply only to a current roster; historical snapshots omit them"
+                "additionalProperties": {}
+              }
             },
             "starters": {
               "type": "array",
@@ -2140,7 +2421,7 @@
             "record": {
               "type": "object",
               "properties": {},
-              "additionalProperties": true
+              "additionalProperties": {}
             },
             "points": {
               "type": [
@@ -2150,24 +2431,27 @@
             },
             "playersPoints": {
               "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
               "additionalProperties": {}
             },
             "rosters": {
+              "description": "Sleeper league-wide roster list when no team is selected",
               "type": "array",
               "items": {
                 "type": "object",
                 "properties": {},
-                "additionalProperties": true
-              },
-              "description": "Sleeper league-wide roster list when no team is selected"
+                "additionalProperties": {}
+              }
             },
             "limitations": {
               "type": "object",
               "properties": {},
-              "additionalProperties": true
+              "additionalProperties": {}
             }
           },
-          "additionalProperties": true,
+          "additionalProperties": {},
           "description": "Platform envelope. Field availability varies by platform (ESPN, Yahoo, Sleeper); absent fields are not provided by that platform."
         }
       },
@@ -2175,8 +2459,7 @@
         "success",
         "data"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -2192,6 +2475,7 @@
     "title": "League Standings",
     "description": "Get season standings and outcome snapshot; includes verified season-outcome fields when available. Returns team records, rankings, and points summaries. The rank field is a standings sort position (1 = best): on ESPN it follows ESPN's playoffSeed order when every team has a unique valid seed; otherwise Flaim computes it from win percentage (a tie counts as half a win), with wins as the tie-breaker. On Sleeper it is computed by Flaim from wins, with points for as the tie-breaker; on Yahoo it is passed through from Yahoo's own standings API. It is NOT a verified postseason finish. For verified postseason outcome, use finalRank and championshipWon instead. Also returns seasonPhase (regular_season/playoffs_in_progress/season_complete), seasonComplete, and per-team outcome fields: finalRank, championshipWon, playoffOutcome, outcomeConfidence, madePlayoffs, playoffSeed. Outcome fields are null when not verifiable — do not infer championship from rank or team name. outcomeConfidence is 'explicit' when the platform reports final ranks, or 'derived' when the champion and runner-up were determined from the final winners-bracket matchup (ESPN historical seasons may omit final ranks); 'derived' only ever appears on ESPN — Yahoo always returns null here, and Sleeper returns 'explicit' for any completed season whose winners bracket names a champion, including when the finish came from the bracket rather than from reported placements; a tied championship game is resolved using the league's playoff tie rule (ESPN's default advances the higher seed). Note: playoffOutcome returns 'in_progress' on Sleeper for teams in active playoffs; ESPN and Yahoo return null for that state. ESPN may also include projected-rank fields. Every platform also returns waiverPriority (the team's current waiver-claim priority, 1 = first — this is the live priority, NOT get_transactions' waiver_priority, which is the priority some past claim used), and Yahoo and Sleeper add faabBalance (remaining free-agent budget; 0 means spent out, not unknown; on Sleeper it already reflects FAAB traded between teams, so it can exceed the league's starting budget). Either can be null (not applicable, or not reported by the platform — do not read null as proof the league lacks FAAB) and they are not mutually exclusive: a FAAB league may also report waiverPriority as its tie-breaker for equal bids. ESPN standings omit faabBalance entirely rather than returning null. Yahoo basketball Roto additionally returns each team's roto block: season stat values, Yahoo-reported per-category points, a separate overall totalPoints, and independent statsCoverage/pointsCoverage. These are season totals, not current-week or date scores. Raw ratio and percentage strings retain Yahoo's precision. Null means unknown, never zero; genuine zero and decimal points are preserved. The category rows can include display-only or unscored stats: do not infer the configured scoring categories from row counts, numeric point counts, or isDisplayOnly:false. Missing labels or metadata stay unknown. Category points are not category ranks; no category ranks, neighbor gaps or attainable gains are supplied or guaranteed. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so team names and league context are already established. For multi-league comparisons, call once per league. For historical finish questions, call get_ancient_history first to discover seasons, then call this tool per season for verified outcomes. Read-only.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "platform": {
@@ -2228,8 +2512,7 @@
         "league_id",
         "season_year"
       ],
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": true,
@@ -2253,6 +2536,7 @@
       "openai/toolInvocation/invoked": "Standings ready"
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -2274,16 +2558,16 @@
               "type": "string"
             },
             "scoringType": {
-              "type": "string",
-              "description": "Yahoo basketball Roto reports roto; other standings formats currently omit this field"
+              "description": "Yahoo basketball Roto reports roto; other standings formats currently omit this field",
+              "type": "string"
             },
             "scoringTypeRaw": {
-              "type": "string",
-              "description": "Provider scoring code for Yahoo basketball Roto"
+              "description": "Provider scoring code for Yahoo basketball Roto",
+              "type": "string"
             },
             "seasonPhase": {
-              "type": "string",
-              "description": "regular_season, playoffs_in_progress, or season_complete"
+              "description": "regular_season, playoffs_in_progress, or season_complete",
+              "type": "string"
             },
             "seasonComplete": {
               "type": "boolean"
@@ -2294,6 +2578,7 @@
                 "type": "object",
                 "properties": {
                   "roto": {
+                    "description": "Yahoo basketball Roto only; additive provider-reported season statistics and category points",
                     "type": "object",
                     "properties": {
                       "statsCoverage": {
@@ -2326,7 +2611,23 @@
                       "pointsCoverage": {
                         "anyOf": [
                           {
-                            "$ref": "#/properties/data/properties/standings/items/properties/roto/properties/statsCoverage/anyOf/0"
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "const": "season"
+                              },
+                              "season": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9999
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "season"
+                            ],
+                            "additionalProperties": false
                           },
                           {
                             "type": "null"
@@ -2335,11 +2636,11 @@
                         "description": "Independent coverage for the provider point rows and total; null prevents mixing another period into season data"
                       },
                       "totalPoints": {
+                        "description": "Yahoo overall Roto team-point total, distinct from each stat row's category points and from legacy pointsFor",
                         "type": [
                           "number",
                           "null"
-                        ],
-                        "description": "Yahoo overall Roto team-point total, distinct from each stat row's category points and from legacy pointsFor"
+                        ]
                       },
                       "categories": {
                         "type": "array",
@@ -2362,32 +2663,26 @@
                               ]
                             },
                             "isDisplayOnly": {
+                              "description": "Yahoo metadata marks display-only; false means not marked, not proof the stat scores; null means metadata unavailable",
                               "type": [
                                 "boolean",
                                 "null"
-                              ],
-                              "description": "Yahoo metadata marks display-only; false means not marked, not proof the stat scores; null means metadata unavailable"
+                              ]
                             },
                             "value": {
-                              "anyOf": [
-                                {
-                                  "type": [
-                                    "number",
-                                    "string"
-                                  ]
-                                },
-                                {
-                                  "type": "null"
-                                }
-                              ],
-                              "description": "Reported season stat value, preserving raw ratio and percentage strings; null means unknown"
+                              "description": "Reported season stat value, preserving raw ratio and percentage strings; null means unknown",
+                              "type": [
+                                "number",
+                                "string",
+                                "null"
+                              ]
                             },
                             "points": {
+                              "description": "Yahoo-reported category Roto points, not rank or a derived award; zero is preserved and null means unknown",
                               "type": [
                                 "number",
                                 "null"
-                              ],
-                              "description": "Yahoo-reported category Roto points, not rank or a derived award; zero is preserved and null means unknown"
+                              ]
                             }
                           },
                           "required": [
@@ -2398,7 +2693,7 @@
                             "value",
                             "points"
                           ],
-                          "additionalProperties": true
+                          "additionalProperties": {}
                         },
                         "description": "Union of reported season stat/point IDs, including display-only or unscored rows; not the configured scored-category set"
                       }
@@ -2409,8 +2704,7 @@
                       "totalPoints",
                       "categories"
                     ],
-                    "additionalProperties": true,
-                    "description": "Yahoo basketball Roto only; additive provider-reported season statistics and category points"
+                    "additionalProperties": {}
                   },
                   "playoffSeed": {
                     "type": [
@@ -2419,11 +2713,11 @@
                     ]
                   },
                   "finalRank": {
+                    "description": "Verified postseason finish; null when not verifiable",
                     "type": [
                       "number",
                       "null"
-                    ],
-                    "description": "Verified postseason finish; null when not verifiable"
+                    ]
                   },
                   "championshipWon": {
                     "type": [
@@ -2438,11 +2732,11 @@
                     ]
                   },
                   "outcomeConfidence": {
+                    "description": "explicit or derived; null when unknown",
                     "type": [
                       "string",
                       "null"
-                    ],
-                    "description": "explicit or derived; null when unknown"
+                    ]
                   },
                   "madePlayoffs": {
                     "type": [
@@ -2451,29 +2745,29 @@
                     ]
                   },
                   "waiverPriority": {
+                    "description": "All platforms: the team's current waiver-claim priority, 1 = first. Present for rolling-priority leagues and for FAAB leagues that use priority as their bid tie-breaker. Null when priority does not apply or the platform did not report a usable value (ESPN reports 0 for no order). Distinct from get_transactions' waiver_priority, which is a past claim's priority.",
                     "type": [
                       "number",
                       "null"
-                    ],
-                    "description": "All platforms: the team's current waiver-claim priority, 1 = first. Present for rolling-priority leagues and for FAAB leagues that use priority as their bid tie-breaker. Null when priority does not apply or the platform did not report a usable value (ESPN reports 0 for no order). Distinct from get_transactions' waiver_priority, which is a past claim's priority."
+                    ]
                   },
                   "faabBalance": {
+                    "description": "Yahoo and Sleeper: remaining FAAB (free-agent budget) balance; 0 is a real spent-out balance, not unknown. On Sleeper the value already nets out FAAB traded between teams, so it can exceed the league starting budget. Null for leagues that do not use FAAB or when the platform did not report a usable value, so null alone does not prove the league lacks FAAB. Absent (not null) on ESPN.",
                     "type": [
                       "number",
                       "null"
-                    ],
-                    "description": "Yahoo and Sleeper: remaining FAAB (free-agent budget) balance; 0 is a real spent-out balance, not unknown. On Sleeper the value already nets out FAAB traded between teams, so it can exceed the league starting budget. Null for leagues that do not use FAAB or when the platform did not report a usable value, so null alone does not prove the league lacks FAAB. Absent (not null) on ESPN."
+                    ]
                   }
                 },
-                "additionalProperties": true
+                "additionalProperties": {}
               }
             },
             "warning": {
-              "type": "string",
-              "description": "Present when part of the response is a fallback rather than the platform's answer, such as a seasonPhase Flaim could not confirm from the playoff bracket."
+              "description": "Present when part of the response is a fallback rather than the platform's answer, such as a seasonPhase Flaim could not confirm from the playoff bracket.",
+              "type": "string"
             }
           },
-          "additionalProperties": true,
+          "additionalProperties": {},
           "description": "Platform envelope. Field availability varies by platform (ESPN, Yahoo, Sleeper); absent fields are not provided by that platform."
         }
       },
@@ -2481,8 +2775,7 @@
         "success",
         "data"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -2498,6 +2791,7 @@
     "title": "League Transactions",
     "description": "Get league transaction activity: adds, drops, waivers, and trades. ESPN football released_since finds explicit DROP items in completed structured events strictly after a caller-supplied timestamp within the existing bounded matchup window; it does not remember checks or notify users. Releases are historical, so check current acquisition state before recommending a pickup. Missing completion times are omitted and reported; the structured source is required. Completed activity is league-wide unless team_id is provided. For \"my moves,\" pass the selected league's user team ID from get_user_session; session context alone does not filter completed activity. Use get_league_info when team and owner names are needed. Rows are newest first and capped by count; before claiming completeness, check window, limitations, warning, truncated (ESPN only), and dropped_invalid_timestamp_count (ESPN and Yahoo). ESPN week selects a matchup period, and its structured source covers failed bids, failed waiver claims with ESPN's failure_reason, withdrawn waiver claims and trade proposals (status canceled, from any team in the league, filed in the period they were made), standalone drops, and the trade lifecycle; a fallback can limit those types. For a historical ESPN pending waiver event, use claim_outcome for an explicitly linked result in the observed history. An unknown outcome does not establish that the claim is still pending. Sleeper week selects a matchup week. Yahoo completed activity defaults to Flaim's rolling 30-day timestamp lookup. For older Yahoo completed activity only, pass both start_date and end_date as inclusive UTC calendar days, covering at most 366 days; use the Yahoo league_id for the requested season, since a range does not cross league seasons, and do not combine it with week, waiver, or pending_trade. Yahoo explicit ranges use one no-count collection response and filter locally, with a 2 MiB bounded read; limitations.upstream_completeness_unverified is always true because Yahoo does not guarantee that response is complete history. Default Yahoo team-filtered requests fetch one page of up to 100 league transactions before filtering; limitations.upstream_bound_reached means older matching rows inside the default window may be missing, and raising count will not recover them. Yahoo type=waiver and type=pending_trade return the authenticated user's own pending items with no timestamp window; team_id only narrows those items. Yahoo pending rows can omit timestamp and date until Yahoo stamps them. Read-only.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "platform": {
@@ -2528,23 +2822,25 @@
           "description": "Season start year — use the season_year returned by get_user_session for this league; only pass an older year when the user explicitly asks about a past season. Basketball and hockey use the start year of a cross-year season (2024 = the 2024-25 season); football and baseball use the single season year (2025 = the 2025 season)."
         },
         "week": {
+          "description": "Optional public week selector. ESPN accepts matchup period 0 or later (0 = preseason), including baseball, basketball, and hockey; omit it for the current and previous matchup periods. Sleeper accepts matchup week 1 or later; omit it for the current and previous week, or, for football before the regular season, week 1 alone, where Sleeper tags preseason activity (window.mode is preseason). Yahoo ignores week on the default recent lookup; an explicit Yahoo start_date/end_date range rejects week.",
           "type": "integer",
           "minimum": 0,
-          "description": "Optional public week selector. ESPN accepts matchup period 0 or later (0 = preseason), including baseball, basketball, and hockey; omit it for the current and previous matchup periods. Sleeper accepts matchup week 1 or later; omit it for the current and previous week, or, for football before the regular season, week 1 alone, where Sleeper tags preseason activity (window.mode is preseason). Yahoo ignores week on the default recent lookup; an explicit Yahoo start_date/end_date range rejects week."
+          "maximum": 9007199254740991
         },
         "released_since": {
-          "type": "string",
-          "description": "League-wide ESPN football only, without type or team_id: caller-supplied last-check ISO timestamp with seconds and UTC offset. Returns explicit DROP items in completed structured events strictly after it within the selected ESPN matchup window, before count. This is not a saved cursor or notification; check current acquisition state before recommending a player. Check window and limitations. This bounded lookup cannot verify complete release history since that time."
+          "description": "League-wide ESPN football only, without type or team_id: caller-supplied last-check ISO timestamp with seconds and UTC offset. Returns explicit DROP items in completed structured events strictly after it within the selected ESPN matchup window, before count. This is not a saved cursor or notification; check current acquisition state before recommending a player. Check window and limitations. This bounded lookup cannot verify complete release history since that time.",
+          "type": "string"
         },
         "start_date": {
-          "type": "string",
-          "description": "Yahoo completed transactions only: inclusive UTC calendar-day start in YYYY-MM-DD form. Requires end_date and the Yahoo league_id for that season, covers at most 366 days, and cannot be combined with week, waiver, or pending_trade. ESPN and Sleeper reject this selector."
+          "description": "Yahoo completed transactions only: inclusive UTC calendar-day start in YYYY-MM-DD form. Requires end_date and the Yahoo league_id for that season, covers at most 366 days, and cannot be combined with week, waiver, or pending_trade. ESPN and Sleeper reject this selector.",
+          "type": "string"
         },
         "end_date": {
-          "type": "string",
-          "description": "Yahoo completed transactions only: inclusive UTC calendar-day end in YYYY-MM-DD form. Requires start_date and the Yahoo league_id for that season, covers at most 366 days, and cannot be combined with week, waiver, or pending_trade. ESPN and Sleeper reject this selector."
+          "description": "Yahoo completed transactions only: inclusive UTC calendar-day end in YYYY-MM-DD form. Requires start_date and the Yahoo league_id for that season, covers at most 366 days, and cannot be combined with week, waiver, or pending_trade. ESPN and Sleeper reject this selector.",
+          "type": "string"
         },
         "type": {
+          "description": "Optional transaction type filter. Sleeper supports add/drop/trade/waiver. Yahoo supports add/drop/trade plus waiver/pending_trade for the authenticated user's own pending items. ESPN supports every listed type except pending_trade via its structured source, including failed_bid and the trade lifecycle types; if ESPN has fallen back to its activity feed, those structured-only filters return ESPN_TRANSACTION_TYPE_UNAVAILABLE rather than an empty result.",
           "type": "string",
           "enum": [
             "add",
@@ -2557,16 +2853,15 @@
             "trade_veto",
             "trade_uphold",
             "failed_bid"
-          ],
-          "description": "Optional transaction type filter. Sleeper supports add/drop/trade/waiver. Yahoo supports add/drop/trade plus waiver/pending_trade for the authenticated user's own pending items. ESPN supports every listed type except pending_trade via its structured source, including failed_bid and the trade lifecycle types; if ESPN has fallen back to its activity feed, those structured-only filters return ESPN_TRANSACTION_TYPE_UNAVAILABLE rather than an empty result."
+          ]
         },
         "count": {
-          "type": "number",
-          "description": "Maximum transactions to return, newest first (default: 25, max: 100). Check window and limitations before claiming completeness."
+          "description": "Maximum transactions to return, newest first (default: 25, max: 100). Check window and limitations before claiming completeness.",
+          "type": "number"
         },
         "team_id": {
-          "type": "string",
-          "description": "Optional team filter, applied before count and echoed as window.team_id. For \"my moves,\" pass the selected league's user team ID from get_user_session; omit for league-wide activity. ESPN team ID; Sleeper roster ID; Yahoo full team key or session team ID. limitations.team_filter_unattributed_rows reports rows without team_ids that could not match. An ESPN trade without trade_sides may identify only one side, so filtering for the other side can miss it; limitations.team_filter_sideless_trade_rows counts such rows the filter left out. In Yahoo's default recent mode, the filter uses one upstream page of up to 100 and limitations.upstream_bound_reached can mean older matching rows are missing. Explicit Yahoo date ranges instead use the bounded no-count response and always report limitations.upstream_completeness_unverified."
+          "description": "Optional team filter, applied before count and echoed as window.team_id. For \"my moves,\" pass the selected league's user team ID from get_user_session; omit for league-wide activity. ESPN team ID; Sleeper roster ID; Yahoo full team key or session team ID. limitations.team_filter_unattributed_rows reports rows without team_ids that could not match. An ESPN trade without trade_sides may identify only one side, so filtering for the other side can miss it; limitations.team_filter_sideless_trade_rows counts such rows the filter left out. In Yahoo's default recent mode, the filter uses one upstream page of up to 100 and limitations.upstream_bound_reached can mean older matching rows are missing. Explicit Yahoo date ranges instead use the bounded no-count response and always report limitations.upstream_completeness_unverified.",
+          "type": "string"
         }
       },
       "required": [
@@ -2575,8 +2870,7 @@
         "league_id",
         "season_year"
       ],
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": true,
@@ -2600,6 +2894,7 @@
       "openai/toolInvocation/invoked": "Transactions ready"
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -2665,18 +2960,18 @@
                   }
                 },
                 "start_date": {
+                  "description": "Inclusive calendar-day start. Yahoo explicit date ranges use UTC.",
                   "type": [
                     "string",
                     "null"
-                  ],
-                  "description": "Inclusive calendar-day start. Yahoo explicit date ranges use UTC."
+                  ]
                 },
                 "end_date": {
+                  "description": "Inclusive calendar-day end. Yahoo explicit date ranges use UTC.",
                   "type": [
                     "string",
                     "null"
-                  ],
-                  "description": "Inclusive calendar-day end. Yahoo explicit date ranges use UTC."
+                  ]
                 },
                 "date_bounds_kind": {
                   "type": "string",
@@ -2694,15 +2989,15 @@
                   ]
                 },
                 "team_id": {
-                  "type": "string",
-                  "description": "The team filter applied, normalized to the ID form rows carry in team_ids"
+                  "description": "The team filter applied, normalized to the ID form rows carry in team_ids",
+                  "type": "string"
                 },
                 "upstream_fetch_limit": {
-                  "type": "number",
-                  "description": "Yahoo team-filtered requests only: the upstream page size the team filter was applied to"
+                  "description": "Yahoo team-filtered requests only: the upstream page size the team filter was applied to",
+                  "type": "number"
                 }
               },
-              "additionalProperties": true
+              "additionalProperties": {}
             },
             "source": {
               "type": "string",
@@ -2716,21 +3011,21 @@
               "type": "object",
               "properties": {
                 "structured_details_incomplete": {
+                  "description": "ESPN only: some returned rows lack detail ESPN normally provides, or the team filter may have excluded trades it could not attribute (team_filter_sideless_trade_rows). Rows marked trade_details_unavailable lack their complete player exchange (or, for a proposal, its sender); the activity-feed fallback also lacks failed bids, FAAB amounts, and the trade lifecycle.",
                   "type": "boolean",
-                  "const": true,
-                  "description": "ESPN only: some returned rows lack detail ESPN normally provides, or the team filter may have excluded trades it could not attribute (team_filter_sideless_trade_rows). Rows marked trade_details_unavailable lack their complete player exchange (or, for a proposal, its sender); the activity-feed fallback also lacks failed bids, FAAB amounts, and the trade lifecycle."
+                  "const": true
                 },
                 "omitted_unscoped_rows": {
-                  "type": "number",
-                  "description": "ESPN activity_feed source only: a best-effort count of rows left out because Flaim could not place them in the requested window. Undated rows may be counted here as well as in dropped_invalid_timestamp_count. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness."
+                  "description": "ESPN activity_feed source only: a best-effort count of rows left out because Flaim could not place them in the requested window. Undated rows may be counted here as well as in dropped_invalid_timestamp_count. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness.",
+                  "type": "number"
                 },
                 "omitted_conflicting_rows": {
-                  "type": "number",
-                  "description": "ESPN activity_feed source only: a best-effort count of rows left out because their period evidence was contradictory, such as a message and its topic naming different periods, a matchup period and scoring period that disagree, or trade legs in different matchup periods. Undated rows may be counted here as well as in dropped_invalid_timestamp_count. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness."
+                  "description": "ESPN activity_feed source only: a best-effort count of rows left out because their period evidence was contradictory, such as a message and its topic naming different periods, a matchup period and scoring period that disagree, or trade legs in different matchup periods. Undated rows may be counted here as well as in dropped_invalid_timestamp_count. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness.",
+                  "type": "number"
                 },
                 "omitted_unrecognized_rows": {
-                  "type": "number",
-                  "description": "ESPN structured sources and Yahoo: a best-effort count of rows the provider returned that Flaim could not recognize or place. On ESPN that is an unknown type, a missing scoring period, or a row without an ESPN ID that could not be told apart from another; on Yahoo it is an unrecognized or malformed row (a transaction type Flaim does not recognize, or an entry with no transaction data), counted before the type, team, and timestamp filters. Those rows are missing from transactions. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness."
+                  "description": "ESPN structured sources and Yahoo: a best-effort count of rows the provider returned that Flaim could not recognize or place. On ESPN that is an unknown type, a missing scoring period, or a row without an ESPN ID that could not be told apart from another; on Yahoo it is an unrecognized or malformed row (a transaction type Flaim does not recognize, or an entry with no transaction data), counted before the type, team, and timestamp filters. Those rows are missing from transactions. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness.",
+                  "type": "number"
                 },
                 "exact_date_bounds_unavailable": {
                   "type": "boolean",
@@ -2741,47 +3036,47 @@
                   "const": true
                 },
                 "release_history_completeness_unverified": {
+                  "description": "ESPN released_since only. The bounded matchup window and explicit structured DROP items do not establish complete release history since the requested timestamp.",
                   "type": "boolean",
-                  "const": true,
-                  "description": "ESPN released_since only. The bounded matchup window and explicit structured DROP items do not establish complete release history since the requested timestamp."
+                  "const": true
                 },
                 "release_timing_unverified_rows": {
-                  "type": "number",
-                  "description": "ESPN released_since: completed release rows omitted because ESPN supplied no usable completion time. Other invalid timestamps may also be counted separately."
+                  "description": "ESPN released_since: completed release rows omitted because ESPN supplied no usable completion time. Other invalid timestamps may also be counted separately.",
+                  "type": "number"
                 },
                 "release_status_unverified_rows": {
-                  "type": "number",
-                  "description": "ESPN released_since: rows with release items omitted because ESPN did not establish completion status or reported conflicting signals."
+                  "description": "ESPN released_since: rows with release items omitted because ESPN did not establish completion status or reported conflicting signals.",
+                  "type": "number"
                 },
                 "possibly_truncated": {
-                  "type": "boolean",
-                  "description": "More matching rows may exist than were returned. ESPN and Sleeper: the count cap cut matching rows. Yahoo: the count cap cut matching rows, or Yahoo's upstream page was full and (for completed activity) did not reach back to the start of the 30-day window, so older matching rows may not have been fetched. On ESPN, also check top-level truncated, which covers activity-feed coverage as well."
+                  "description": "More matching rows may exist than were returned. ESPN and Sleeper: the count cap cut matching rows. Yahoo: the count cap cut matching rows, or Yahoo's upstream page was full and (for completed activity) did not reach back to the start of the 30-day window, so older matching rows may not have been fetched. On ESPN, also check top-level truncated, which covers activity-feed coverage as well.",
+                  "type": "boolean"
                 },
                 "team_filter_unattributed_rows": {
                   "type": "number"
                 },
                 "team_filter_sideless_trade_rows": {
-                  "type": "number",
-                  "description": "ESPN team-filtered requests only: trade-lifecycle rows that matched the type filter, had no trade_sides, and did not list the requested team. Their team_ids name only the acting team (possibly a commissioner or vetoing team), so the requested team may have been the other party. When present, structured_details_incomplete is set."
+                  "description": "ESPN team-filtered requests only: trade-lifecycle rows that matched the type filter, had no trade_sides, and did not list the requested team. Their team_ids name only the acting team (possibly a commissioner or vetoing team), so the requested team may have been the other party. When present, structured_details_incomplete is set.",
+                  "type": "number"
                 },
                 "upstream_bound_reached": {
                   "type": "boolean",
                   "const": true
                 },
                 "upstream_completeness_unverified": {
+                  "description": "Yahoo explicit date ranges only: Flaim used Yahoo's no-count transaction collection and filtered it locally. Yahoo does not document that response as complete history, so returned rows do not prove complete coverage.",
                   "type": "boolean",
-                  "const": true,
-                  "description": "Yahoo explicit date ranges only: Flaim used Yahoo's no-count transaction collection and filtered it locally. Yahoo does not document that response as complete history, so returned rows do not prove complete coverage."
+                  "const": true
                 }
               },
-              "additionalProperties": true
+              "additionalProperties": {}
             },
             "count": {
               "type": "number"
             },
             "truncated": {
-              "type": "boolean",
-              "description": "ESPN only: true when the count cap cut matching rows or, on the activity_feed source, the time budget or page limit kept Flaim from proving the whole window was read. Yahoo and Sleeper do not send this field; use limitations.possibly_truncated."
+              "description": "ESPN only: true when the count cap cut matching rows or, on the activity_feed source, the time budget or page limit kept Flaim from proving the whole window was read. Yahoo and Sleeper do not send this field; use limitations.possibly_truncated.",
+              "type": "boolean"
             },
             "transactions": {
               "type": "array",
@@ -2810,11 +3105,29 @@
                     "description": "ESPN structured rows only: provider event ID with its original JSON kind and exact text. A numeric ID and a string ID with the same text are distinct. A generated transaction_id has no provider event ID."
                   },
                   "espn_related_event_id": {
-                    "$ref": "#/properties/data/properties/transactions/items/properties/espn_event_id",
-                    "description": "ESPN structured rows only: exact typed event ID named by ESPN’s relationship pointer. The referenced event may be outside the available history or returned row count."
+                    "description": "ESPN structured rows only: exact typed event ID named by ESPN’s relationship pointer. The referenced event may be outside the available history or returned row count.",
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "number",
+                          "string"
+                        ]
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "value"
+                    ],
+                    "additionalProperties": false
                   },
                   "claim_outcome": {
-                    "anyOf": [
+                    "description": "ESPN structured pending waiver events only. Outcome observed through one exact typed link from a same-team terminal event in the bounded provider history. unknown means evidence was absent, unproven, or conflicting. The row’s status is the original event status. Neither pending nor unknown establishes current waiver queue membership.",
+                    "oneOf": [
                       {
                         "type": "object",
                         "properties": {
@@ -2840,7 +3153,25 @@
                             ]
                           },
                           "outcome_event_id": {
-                            "$ref": "#/properties/data/properties/transactions/items/properties/espn_event_id"
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "number",
+                                  "string"
+                                ]
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "value"
+                            ],
+                            "additionalProperties": false,
+                            "description": "ESPN structured rows only: provider event ID with its original JSON kind and exact text. A numeric ID and a string ID with the same text are distinct. A generated transaction_id has no provider event ID."
                           }
                         },
                         "required": [
@@ -2849,24 +3180,23 @@
                         ],
                         "additionalProperties": false
                       }
-                    ],
-                    "description": "ESPN structured pending waiver events only. Outcome observed through one exact typed link from a same-team terminal event in the bounded provider history. unknown means evidence was absent, unproven, or conflicting. The row’s status is the original event status. Neither pending nor unknown establishes current waiver queue membership."
+                    ]
                   },
                   "transaction_id": {
-                    "type": "string",
-                    "description": "Row ID. On ESPN it depends on source: structured rows (mTransactions2 and mTransactions2_with_activity_trade_details) use ESPN's transaction ID, while activity_feed rows use activity message or topic IDs, so the same transaction has a different ID when source changes. When ESPN supplies no ID, Flaim generates a key (on structured rows it starts with \"mtx-\"); a generated key is not an ESPN ID and is not guaranteed to be unique or stable across calls. Do not match ESPN rows across responses with different source values, or by a generated key, using this ID."
+                    "description": "Row ID. On ESPN it depends on source: structured rows (mTransactions2 and mTransactions2_with_activity_trade_details) use ESPN's transaction ID, while activity_feed rows use activity message or topic IDs, so the same transaction has a different ID when source changes. When ESPN supplies no ID, Flaim generates a key (on structured rows it starts with \"mtx-\"); a generated key is not an ESPN ID and is not guaranteed to be unique or stable across calls. Do not match ESPN rows across responses with different source values, or by a generated key, using this ID.",
+                    "type": "string"
                   },
                   "timestamp": {
                     "type": "number"
                   },
                   "timestamp_source": {
+                    "description": "ESPN only: where timestamp came from. processDate is when ESPN processed a structured row; proposedDate is a structured row's proposal time, used when it has no valid processDate; activity is the activity feed's message or topic date.",
                     "type": "string",
                     "enum": [
                       "processDate",
                       "proposedDate",
                       "activity"
-                    ],
-                    "description": "ESPN only: where timestamp came from. processDate is when ESPN processed a structured row; proposedDate is a structured row's proposal time, used when it has no valid processDate; activity is the activity feed's message or topic date."
+                    ]
                   },
                   "date": {
                     "type": "string"
@@ -2875,19 +3205,19 @@
                     "type": "string"
                   },
                   "status": {
+                    "description": "complete, failed, pending, canceled, or unknown. canceled is ESPN only and means ESPN reported the row as canceled: seen live on waiver claims a team withdrew before the waiver run and on trade proposals their sender took back. Those rows had no process date, so timestamp_source was proposedDate, and they stay in the scoring period they were filed in, which can be weeks old; ESPN served withdrawn claims from every team in the league, not only the user's. On ESPN, unknown means ESPN sent a status Flaim does not map (carried in provider_status) or no status at all.",
                     "type": [
                       "string",
                       "null"
-                    ],
-                    "description": "complete, failed, pending, canceled, or unknown. canceled is ESPN only and means ESPN reported the row as canceled: seen live on waiver claims a team withdrew before the waiver run and on trade proposals their sender took back. Those rows had no process date, so timestamp_source was proposedDate, and they stay in the scoring period they were filed in, which can be weeks old; ESPN served withdrawn claims from every team in the league, not only the user's. On ESPN, unknown means ESPN sent a status Flaim does not map (carried in provider_status) or no status at all."
+                    ]
                   },
                   "failure_reason": {
-                    "type": "string",
-                    "description": "ESPN structured rows with status failed: ESPN's own reason code for why the claim did not go through, such as FAILED_POSITIONLIMIT, FAILED_ROSTERLIMIT, FAILED_INVALIDPLAYERSOURCE, or FAILED_PLAYERALREADYDROPPED. ESPN reports it on waiver rows as well as failed_bid rows. Absent when the row did not fail or ESPN gave no reason."
+                    "description": "ESPN structured rows with status failed: ESPN's own reason code for why the claim did not go through, such as FAILED_POSITIONLIMIT, FAILED_ROSTERLIMIT, FAILED_INVALIDPLAYERSOURCE, or FAILED_PLAYERALREADYDROPPED. ESPN reports it on waiver rows as well as failed_bid rows. Absent when the row did not fail or ESPN gave no reason.",
+                    "type": "string"
                   },
                   "provider_status": {
-                    "type": "string",
-                    "description": "ESPN structured rows with status unknown: the status string ESPN sent, verbatim, when Flaim has no mapping for it. Absent when the status mapped or ESPN sent none (seen on some completed trade rows)."
+                    "description": "ESPN structured rows with status unknown: the status string ESPN sent, verbatim, when Flaim has no mapping for it. Absent when the status mapped or ESPN sent none (seen on some completed trade rows).",
+                    "type": "string"
                   },
                   "week": {
                     "type": [
@@ -2899,14 +3229,14 @@
                     "type": "number"
                   },
                   "team_ids": {
+                    "description": "Teams involved in the row. Do not infer which team acted or proposed a trade from their order.",
                     "type": "array",
                     "items": {
                       "type": [
                         "string",
                         "number"
                       ]
-                    },
-                    "description": "Teams involved in the row. Do not infer which team acted or proposed a trade from their order."
+                    }
                   },
                   "players_added": {
                     "type": "array",
@@ -2929,7 +3259,7 @@
                       "required": [
                         "id"
                       ],
-                      "additionalProperties": true
+                      "additionalProperties": {}
                     }
                   },
                   "players_dropped": {
@@ -2953,7 +3283,7 @@
                       "required": [
                         "id"
                       ],
-                      "additionalProperties": true
+                      "additionalProperties": {}
                     }
                   },
                   "trade_sides": {
@@ -2987,7 +3317,7 @@
                                 "required": [
                                   "id"
                                 ],
-                                "additionalProperties": true
+                                "additionalProperties": {}
                               }
                             },
                             "gave_up": {
@@ -3011,11 +3341,11 @@
                                 "required": [
                                   "id"
                                 ],
-                                "additionalProperties": true
+                                "additionalProperties": {}
                               }
                             }
                           },
-                          "additionalProperties": true
+                          "additionalProperties": {}
                         }
                       },
                       {
@@ -3024,13 +3354,13 @@
                     ]
                   },
                   "proposed_by_team_id": {
-                    "type": "string",
-                    "description": "ESPN trade_proposal rows only: the team ID that sent the proposal. Present only when trade_sides are complete, and then always one of the row's team_ids. When this field is present and trade_details_unavailable is absent, a team sent the proposal if this matches its ID, is a recipient if it is in team_ids but does not match (trade_sides shows who receives which players), and is not involved if it is not in team_ids. When trade_details_unavailable is set, team_ids may be missing the other party, so a team's absence from team_ids does not mean the proposal is between other teams, and the direction is unknown."
+                    "description": "ESPN trade_proposal rows only: the team ID that sent the proposal. Present only when trade_sides are complete, and then always one of the row's team_ids. When this field is present and trade_details_unavailable is absent, a team sent the proposal if this matches its ID, is a recipient if it is in team_ids but does not match (trade_sides shows who receives which players), and is not involved if it is not in team_ids. When trade_details_unavailable is set, team_ids may be missing the other party, so a team's absence from team_ids does not mean the proposal is between other teams, and the direction is unknown.",
+                    "type": "string"
                   },
                   "trade_details_unavailable": {
+                    "description": "ESPN trade, proposal, decline, veto, and uphold rows only: the complete player exchange, and for a proposal its sender, could not be determined from ESPN's data. The row is real, but its trade cannot be described in full; any players_added or players_dropped entries may be partial and are not the whole trade.",
                     "type": "boolean",
-                    "const": true,
-                    "description": "ESPN trade, proposal, decline, veto, and uphold rows only: the complete player exchange, and for a proposal its sender, could not be determined from ESPN's data. The row is real, but its trade cannot be described in full; any players_added or players_dropped entries may be partial and are not the whole trade."
+                    "const": true
                   },
                   "faab_bid": {
                     "type": [
@@ -3056,25 +3386,28 @@
                     ]
                   }
                 },
-                "additionalProperties": true
+                "additionalProperties": {}
               }
             },
             "teams": {
+              "description": "ESPN team ID to display name map",
               "type": "object",
-              "additionalProperties": {
+              "propertyNames": {
                 "type": "string"
               },
-              "description": "ESPN team ID to display name map"
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "warning": {
               "type": "string"
             },
             "dropped_invalid_timestamp_count": {
-              "type": "number",
-              "description": "ESPN and Yahoo: a best-effort count of rows left out because the provider gave no valid date, counted before the type and team filters. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness. On ESPN these rows may also be counted in limitations.omitted_unscoped_rows or omitted_conflicting_rows. Yahoo reports it on completed-activity requests; type=waiver and type=pending_trade return undated pending rows without timestamp and date instead and report 0. Sleeper does not send this field."
+              "description": "ESPN and Yahoo: a best-effort count of rows left out because the provider gave no valid date, counted before the type and team filters. A nonzero value means rows may have been left out, so a caller should fail closed; the number can over- or under-count and is not a reconciliation, and 0 does not prove completeness. On ESPN these rows may also be counted in limitations.omitted_unscoped_rows or omitted_conflicting_rows. Yahoo reports it on completed-activity requests; type=waiver and type=pending_trade return undated pending rows without timestamp and date instead and report 0. Sleeper does not send this field.",
+              "type": "number"
             }
           },
-          "additionalProperties": true,
+          "additionalProperties": {},
           "description": "Platform envelope. Field availability varies by platform (ESPN, Yahoo, Sleeper); absent fields are not provided by that platform."
         }
       },
@@ -3082,8 +3415,7 @@
         "success",
         "data"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -3131,6 +3463,7 @@
       "openai/resultCanProduceWidget": true
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -3157,16 +3490,55 @@
                 "year",
                 "label"
               ],
-              "additionalProperties": true
+              "additionalProperties": {}
             },
             "baseball": {
-              "$ref": "#/properties/currentSeasons/properties/football"
+              "type": "object",
+              "properties": {
+                "year": {
+                  "type": "number"
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "year",
+                "label"
+              ],
+              "additionalProperties": {}
             },
             "basketball": {
-              "$ref": "#/properties/currentSeasons/properties/football"
+              "type": "object",
+              "properties": {
+                "year": {
+                  "type": "number"
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "year",
+                "label"
+              ],
+              "additionalProperties": {}
             },
             "hockey": {
-              "$ref": "#/properties/currentSeasons/properties/football"
+              "type": "object",
+              "properties": {
+                "year": {
+                  "type": "number"
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "year",
+                "label"
+              ],
+              "additionalProperties": {}
             }
           },
           "required": [
@@ -3175,7 +3547,7 @@
             "basketball",
             "hockey"
           ],
-          "additionalProperties": true
+          "additionalProperties": {}
         },
         "timezone": {
           "type": "string"
@@ -3185,6 +3557,9 @@
         },
         "leaguesBySport": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {
             "type": "number"
           }
@@ -3229,7 +3604,7 @@
                 "platform",
                 "leagueId"
               ],
-              "additionalProperties": true
+              "additionalProperties": {}
             },
             {
               "type": "null"
@@ -3238,8 +3613,42 @@
         },
         "defaultLeagues": {
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {
-            "$ref": "#/properties/defaultLeague/anyOf/0"
+            "type": "object",
+            "properties": {
+              "platform": {
+                "type": "string"
+              },
+              "leagueId": {
+                "type": "string"
+              },
+              "sport": {
+                "type": "string"
+              },
+              "teamId": {
+                "type": "string"
+              },
+              "seasonYear": {
+                "type": "number"
+              },
+              "season": {
+                "type": "string"
+              },
+              "leagueName": {
+                "type": "string"
+              },
+              "teamName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "platform",
+              "leagueId"
+            ],
+            "additionalProperties": {}
           }
         },
         "allLeagues": {
@@ -3288,7 +3697,7 @@
               "leagueId",
               "platform"
             ],
-            "additionalProperties": true
+            "additionalProperties": {}
           }
         },
         "warnings": {
@@ -3313,7 +3722,7 @@
               "type": "boolean"
             }
           },
-          "additionalProperties": true
+          "additionalProperties": {}
         }
       },
       "required": [
@@ -3329,8 +3738,7 @@
         "allLeagues",
         "instructions"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -3383,6 +3791,7 @@
       }
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -3450,7 +3859,7 @@
               "teamId",
               "isDefault"
             ],
-            "additionalProperties": true
+            "additionalProperties": {}
           }
         },
         "timezone": {
@@ -3467,8 +3876,7 @@
         "success",
         "leagues"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -3484,15 +3892,15 @@
     "title": "My Leagues in Chat",
     "description": "Opens the Flaim home as a tab in the current chat: the user's connected current-season fantasy leagues, each team's matchup, roster, standings, and moves, and starter questions, which post into that chat when tapped. It is a UI entrypoint the user opens from a chat, hidden from the model on hosts that support MCP Apps. For league questions or the user's league list, use get_user_session instead. Read-only: it reads the same Flaim league records and saved defaults as get_user_session, and the asks the user kept, plus which Flaim home features are turned on for them, for the page to show (the asks are not part of this result's text), and changes nothing.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "prefetch": {
-          "type": "boolean",
-          "description": "Set only by the Flaim page when it prepares the home in the background before the user opens it, so the call is counted apart from a home open. Leave it out."
+          "description": "Set only by the Flaim page when it prepares the home in the background before the user opens it, so the call is counted apart from a home open. Leave it out.",
+          "type": "boolean"
         }
       },
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": true,
@@ -3527,6 +3935,7 @@
       }
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -3594,7 +4003,7 @@
               "teamId",
               "isDefault"
             ],
-            "additionalProperties": true
+            "additionalProperties": {}
           }
         },
         "timezone": {
@@ -3611,8 +4020,7 @@
         "success",
         "leagues"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -3628,9 +4036,11 @@
     "title": "Refresh Leagues",
     "description": "Refresh connected fantasy leagues by asking Flaim to rediscover leagues through connected ESPN, Yahoo, and Sleeper accounts. Use only when the user explicitly asks to refresh, or from the refresh control on the league widget where the client supports it. Refresh can update Flaim registry timestamps and provider metadata, remove saved current-season Sleeper league associations after complete provider evidence confirms the user is no longer an owner or co-owner, and clear defaults that still point to removed associations. It preserves historical seasons and does not change provider lineups or rosters, add or drop players, submit waiver claims or trades, or modify league settings. If this call succeeds, call get_user_session again to show the updated league list. If it fails, follow the error retry guidance and any retry_after value; do not retry in a loop.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "platforms": {
+          "description": "Optional platforms to refresh. Omit to refresh every connected platform.",
           "type": "array",
           "items": {
             "type": "string",
@@ -3639,12 +4049,10 @@
               "yahoo",
               "sleeper"
             ]
-          },
-          "description": "Optional platforms to refresh. Omit to refresh every connected platform."
+          }
         }
       },
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": false,
@@ -3668,6 +4076,7 @@
       "openai/toolInvocation/invoked": "Refresh complete"
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -3680,7 +4089,11 @@
           }
         },
         "results": {
+          "description": "Per-platform refresh outcome keyed by platform name",
           "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
           "additionalProperties": {
             "type": "object",
             "properties": {
@@ -3709,16 +4122,14 @@
               "platform",
               "status"
             ],
-            "additionalProperties": true
-          },
-          "description": "Per-platform refresh outcome keyed by platform name"
+            "additionalProperties": {}
+          }
         }
       },
       "required": [
         "success"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -3734,24 +4145,24 @@
     "title": "Reorder Kept Asks",
     "description": "Puts the user's kept asks (\"Your asks\") in a new order on their Flaim account, when the user moves one up or down in the Flaim home page. It is called by the Flaim home page and hidden from the model on hosts that support MCP Apps. It takes every kept ask's id, in the new order, and changes nothing but the order.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "ids": {
+          "minItems": 1,
+          "maxItems": 12,
           "type": "array",
           "items": {
             "type": "string",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
           },
-          "minItems": 1,
-          "maxItems": 12,
           "description": "Every one of the user's kept asks, by id, in the new order."
         }
       },
       "required": [
         "ids"
       ],
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": false,
@@ -3778,6 +4189,7 @@
       }
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -3802,8 +4214,7 @@
         "success",
         "max"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
@@ -3819,12 +4230,13 @@
     "title": "Keep an Ask",
     "description": "Saves one of the user's kept asks (\"Your asks\") from the Flaim home page: adds a new ask, or edits the name and wording of one the user already kept, on the user's Flaim account. It is called by the Flaim home page and hidden from the model on hosts that support MCP Apps. It changes only the user's saved asks, never league data or anything on ESPN, Yahoo, or Sleeper.",
     "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "id": {
+          "description": "The kept ask to edit. Leave it out to add a new ask.",
           "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-          "description": "The kept ask to edit. Leave it out to add a new ask."
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
         },
         "label": {
           "type": "string",
@@ -3839,18 +4251,17 @@
           "description": "The ask as the user wants it sent, without the \"Using Flaim, \" lead-in the page adds back."
         },
         "source_key": {
+          "description": "The Try asking prompt this ask replaces, as prompt:<n>, when it replaces one. Ignored on an edit.",
           "type": "string",
           "minLength": 1,
-          "maxLength": 200,
-          "description": "The Try asking prompt this ask replaces, as prompt:<n>, when it replaces one. Ignored on an edit."
+          "maxLength": 200
         }
       },
       "required": [
         "label",
         "text"
       ],
-      "additionalProperties": false,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": false
     },
     "annotations": {
       "readOnlyHint": false,
@@ -3877,6 +4288,7 @@
       }
     },
     "outputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "success": {
@@ -3902,8 +4314,7 @@
         "success",
         "max"
       ],
-      "additionalProperties": true,
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "additionalProperties": {}
     },
     "securitySchemes": [
       {
