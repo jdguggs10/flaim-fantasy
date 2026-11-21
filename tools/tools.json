@@ -305,7 +305,7 @@
         },
         "league_id": {
           "type": "string",
-          "description": "League ID (get from get_user_session)"
+          "description": "League ID (get from get_user_session), passed whole, exactly as returned; Yahoo IDs include a season prefix, like 449.l.12345"
         },
         "season_year": {
           "description": "Season start year. Omit for the current sport season; use the season_year returned by get_user_session for this league or a past draft. Basketball and hockey use the start year of a cross-year season (2024 = the 2024-25 season); football and baseball use the single season year (2025 = the 2025 season).",
@@ -867,7 +867,7 @@
         },
         "league_id": {
           "type": "string",
-          "description": "League ID (get from get_user_session)"
+          "description": "League ID (get from get_user_session), passed whole, exactly as returned; Yahoo IDs include a season prefix, like 449.l.12345"
         },
         "season_year": {
           "type": "number",
@@ -953,7 +953,7 @@
                 "alphabetical",
                 "platform_trending_then_rank"
               ],
-              "description": "List ranking: \"platform_rostered_rate_desc\" (ESPN provider-side with draft-rank tiebreak; ordinary Yahoo calls locally re-rank by market rate, nulls last, name/id tiebreak), \"platform_overall_rank\" (Yahoo inventory pages: upstream overall rank, retained for offset continuity), \"platform_trending_then_rank\" (Sleeper: players most added across Sleeper in the last 24 hours first, then Sleeper's search rank, name/id tiebreak), or \"alphabetical\" (retained for compatibility; not currently emitted)"
+              "description": "List ranking: \"platform_rostered_rate_desc\" (ESPN provider-side with draft-rank tiebreak; ordinary Yahoo calls re-rank by market rate only the players fetched, Yahoo's best available by overall rank, fetched in pages of 25 until count is covered (rankingPool.scannedPlayers is the pool size and count the number returned), nulls last, name/id tiebreak; when rankingPool.complete is false, lower-ranked but widely owned players, in football often kickers and defenses, can be missing, and a position filter or a larger count widens the check), \"platform_overall_rank\" (Yahoo inventory pages: upstream overall rank, retained for offset continuity), \"platform_trending_then_rank\" (Sleeper: players most added across Sleeper in the last 24 hours first, then Sleeper's search rank, name/id tiebreak), or \"alphabetical\" (retained for compatibility; not currently emitted)"
             },
             "capabilities": {
               "type": "object",
@@ -1288,6 +1288,27 @@
               ],
               "additionalProperties": {}
             },
+            "rankingPool": {
+              "description": "Yahoo ranked calls only: the players the market-rate order covers, scannedPlayers fetched by Yahoo overall rank in pages of 25 (basis yahoo_overall_rank), so it can exceed count; complete is true only when Yahoo signaled its list ended inside them",
+              "type": "object",
+              "properties": {
+                "basis": {
+                  "type": "string"
+                },
+                "scannedPlayers": {
+                  "type": "number"
+                },
+                "complete": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "basis",
+                "scannedPlayers",
+                "complete"
+              ],
+              "additionalProperties": {}
+            },
             "warning": {
               "type": "string"
             }
@@ -1349,7 +1370,7 @@
         },
         "league_id": {
           "type": "string",
-          "description": "League ID (get from get_user_session)"
+          "description": "League ID (get from get_user_session), passed whole, exactly as returned; Yahoo IDs include a season prefix, like 449.l.12345"
         },
         "season_year": {
           "type": "number",
@@ -1667,7 +1688,7 @@
         },
         "league_id": {
           "type": "string",
-          "description": "League ID (get from get_user_session)"
+          "description": "League ID (get from get_user_session), passed whole, exactly as returned; Yahoo IDs include a season prefix, like 449.l.12345"
         },
         "season_year": {
           "type": "number",
@@ -2051,7 +2072,7 @@
         },
         "league_id": {
           "type": "string",
-          "description": "League ID (get from get_user_session)"
+          "description": "League ID (get from get_user_session), passed whole, exactly as returned; Yahoo IDs include a season prefix, like 449.l.12345"
         },
         "season_year": {
           "type": "number",
@@ -2241,7 +2262,7 @@
   {
     "name": "get_roster",
     "title": "Team Roster",
-    "description": "Get roster details for a specific team, current by default and historical on request. Exact payload varies by platform: ESPN and Yahoo return player entries with lineup/position context, while Sleeper returns starters, bench, reserve, taxi, and record metadata for the selected roster. Keeper fields are additive and platform-dependent; never assume one provider's keeper fields or units exist on another. ESPN adds per-player keeperValue and keeperValueFuture plus one response-level keeperValueUnit of auction_dollars or draft_round, omitted rather than guessed when ESPN's draft type does not determine it; a historical snapshot withholds keeperValueFuture and flags keeperValueFutureAvailable false. Sleeper resolves keepers to player entries on the current roster only, passing the list through as Sleeper sends it; an empty or null list does not show that the league has no keepers. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. On a current Yahoo roster only, entries may also add isUndroppable and isEditable. These are Yahoo player flags, not comprehensive transaction or lineup-lock rules: isEditable does not provide a lock time or guarantee that an add, drop, or lineup move is legal. Current Yahoo entries may also add eligiblePositions from Yahoo metadata, preserving provider-native codes and order without filtering or mapping to another platform's labels. This is separate from the assigned slot and does not prove that a move is legal. Honor codes Yahoo explicitly lists, including flex codes; do not infer additional eligibility. Missing, empty, or malformed eligibility is omitted; an absent eligiblePositions means unknown, not ineligible. Historical Yahoo snapshots omit eligiblePositions and both flags. Historical snapshots: pass week for football (all platforms) and Sleeper basketball (matchup week), or as_of_date (YYYY-MM-DD) for ESPN/Yahoo baseball, basketball, and hockey, never both. An invalid selector returns a corrective error naming the right one. Every response includes a snapshot block identifying what was returned (current vs week vs date); historical responses may add limitation flags (acquisitionMetadataAvailable, reserveAndTaxiClassificationAvailable) when provider history omits those details. A current Sleeper roster sets limitations.playerStatusAvailable false when it could not confirm the league is live this season and so withheld injury designations; a missing injuryStatus then does not mean the player is healthy. For \"roster during matchup week N\" questions in daily sports, ask the user for a specific date rather than guessing. One matchup spans several daily rosters. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so the model already knows the league's team names, owner/team mapping, league settings, and roster context before interpreting this roster. Requires authentication except on Sleeper's public API. Read-only.",
+    "description": "Get roster details for a specific team, current by default and historical on request. Exact payload varies by platform: ESPN and Yahoo return player entries with lineup/position context, while Sleeper returns starters, bench, reserve, taxi, and record metadata for the selected roster. Keeper fields are additive and platform-dependent; never assume one provider's keeper fields or units exist on another. ESPN adds per-player keeperValue and keeperValueFuture plus one response-level keeperValueUnit of auction_dollars or draft_round, omitted rather than guessed when ESPN's draft type does not determine it; a historical snapshot withholds keeperValueFuture and flags keeperValueFutureAvailable false. Sleeper resolves keepers to player entries on the current roster only, passing the list through as Sleeper sends it; an empty or null list does not show that the league has no keepers. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. On a current Yahoo roster only, entries may also add isUndroppable and isEditable. These are Yahoo player flags, not comprehensive transaction or lineup-lock rules: isEditable does not provide a lock time or guarantee that an add, drop, or lineup move is legal. Current Yahoo entries may also add eligiblePositions from Yahoo metadata, preserving provider-native codes and order without filtering or mapping to another platform's labels. This is separate from the assigned slot and does not prove that a move is legal. Honor codes Yahoo explicitly lists, including flex codes; do not infer additional eligibility. Missing, empty, or malformed eligibility is omitted; an absent eligiblePositions means unknown, not ineligible. Historical Yahoo snapshots omit eligiblePositions and both flags. Historical snapshots: pass week for football (all platforms) and Sleeper basketball (matchup week), or as_of_date (YYYY-MM-DD) for ESPN/Yahoo baseball, basketball, and hockey, never both. An invalid selector returns a corrective error naming the right one, except that a positive whole-number week on ESPN or Yahoo baseball, basketball, or hockey returns the current roster, with snapshot.requested_week and snapshot.note saying the week was ignored. Every response includes a snapshot block identifying what was returned (current vs week vs date); historical responses may add limitation flags (acquisitionMetadataAvailable, reserveAndTaxiClassificationAvailable) when provider history omits those details. A current Sleeper roster sets limitations.playerStatusAvailable false when it could not confirm the league is live this season and so withheld injury designations; a missing injuryStatus then does not mean the player is healthy. For \"roster during matchup week N\" questions in daily sports, ask the user for a specific date rather than guessing. One matchup spans several daily rosters. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so the model already knows the league's team names, owner/team mapping, league settings, and roster context before interpreting this roster. Requires authentication except on Sleeper's public API. Read-only.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -2267,7 +2288,7 @@
         },
         "league_id": {
           "type": "string",
-          "description": "League ID (get from get_user_session)"
+          "description": "League ID (get from get_user_session), passed whole, exactly as returned; Yahoo IDs include a season prefix, like 449.l.12345"
         },
         "season_year": {
           "type": "number",
@@ -2499,7 +2520,7 @@
         },
         "league_id": {
           "type": "string",
-          "description": "League ID (get from get_user_session)"
+          "description": "League ID (get from get_user_session), passed whole, exactly as returned; Yahoo IDs include a season prefix, like 449.l.12345"
         },
         "season_year": {
           "type": "number",
@@ -2815,7 +2836,7 @@
         },
         "league_id": {
           "type": "string",
-          "description": "League ID (get from get_user_session)"
+          "description": "League ID (get from get_user_session), passed whole, exactly as returned; Yahoo IDs include a season prefix, like 449.l.12345"
         },
         "season_year": {
           "type": "number",
