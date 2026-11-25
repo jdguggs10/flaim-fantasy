@@ -841,7 +841,7 @@
   {
     "name": "get_free_agents",
     "title": "Available Players",
-    "description": "Get players available to acquire in the specified fantasy league, optionally filtered by position. This is fantasy-league availability, not professional-contract status. Pass a requested count exactly from 1 through 100. For a request above 100, start compact inventory paging with offset 0 and count up to 100, then pass each returned pagination.nextOffset until the requested number is reached, endReached is true, or no nextOffset is returned. Inventory pages are live best-effort, not a point-in-time snapshot: availability can change while pages are fetched, so never promise an exact complete inventory, no duplicates, or no omissions. Inventory pages preserve provider order: ESPN roster rate, Yahoo overall rank, Sleeper trending then rank; Yahoo inventory pages are not globally market-rate sorted. Prefer the canonical fields: every response carries leagueId, seasonYear, position, count, ordering, capabilities, and ownershipScope; entries carry team (real-life club, null when none) and id (platform player id as a string, when supplied) on every platform, ESPN and Yahoo entries add acquisitionState (\"free_agent\", \"waivers\", or null when the platform cannot determine the subtype), and ESPN waiver rows may also add waiverClearsAt (ISO time). Yahoo waiver rows may instead add waiverDate as a YYYY-MM-DD calendar date with no time or timezone; never turn it into an exact clearance time. Legacy platform fields remain alongside for compatibility on ordinary ranked calls, while inventory pages return compact fields by default. For ESPN football inventory requests asking for scoring or injury details, set include_inventory_details true on every offset page. These are season totals and averages, not weekly projections; an absent injury status means unknown, not healthy. Refer to leagues, teams, and players by name in answers; IDs are for tool calls only and must not be printed. ESPN always marks capabilities.acquisitionState true. Yahoo marks it true only when at least one returned entry has a known state; Yahoo entries still carry acquisitionState null when the flag is false. ownershipScope \"platform_global\" means percentOwned/percentStarted cover all leagues on that platform — never ownership within the selected league. An ESPN-wide started rate is never conditional on the player being rostered. Label every reported percentage as an ESPN-wide roster/start rate or Yahoo-wide market rate. Translate ownership scope silently into that provider-wide wording; never print the ownershipScope key, platform_global enum, or get_free_agents tool name. If capabilities marks rates unavailable, write \"[Provider] market ownership rate: not provided\"; do not print a missing response field name or null value, call get_players, or offer a lookup. When acquisitionState is null or not present, call rows \"available players,\" never specifically free agents or waivers, and do not promise an immediate add. A returned player is already confirmed available in that league. acquisitionState is the provider-reported subtype, not a guarantee that a specific roster move is legal; do not promise an immediate add from it alone. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. Use get_roster only when the current request separately asks who owns a player; never offer it after an available-player result. Do not include injuryStatus or any injury detail unless the user asks for it; when asked, verify current web evidence and translate provider codes into plain language. State acquisition status in plain language from acquisitionState (\"a free agent\", \"on waivers\"); never print raw codes — neither provider codes such as FREEAGENT or WAIVERS nor canonical values like free_agent verbatim. Use current web evidence before adding analysis or pickup recommendations. Use established session context (call get_user_session only if needed), then get_league_info for the selected league if this chat has not already loaded it; fan out once per league for comparisons. Requires authentication on ESPN/Yahoo; Sleeper uses the public API. Read-only. Hard stop: after satisfying a returned-list or field-explanation request, end the answer immediately after the requested facts. Remove every closing question or offer to do more work, including roster checks, lineup-fit checks, comparisons, rankings, recommendations, role or health analysis, trends, or outlooks; never append \"if you want\", \"tell me which player\", or a similar invitation unless the user's current request explicitly asks for that additional work.",
+    "description": "Get players available to acquire in the specified fantasy league, optionally filtered by position. This is fantasy-league availability, not professional-contract status. Pass a requested count exactly from 1 through 100. For a request above 100, start compact inventory paging with offset 0 and count up to 100, then pass each returned pagination.nextOffset until the requested number is reached, endReached is true, or no nextOffset is returned. Inventory pages are live best-effort, not a point-in-time snapshot: availability can change while pages are fetched, so never promise an exact complete inventory, no duplicates, or no omissions. Inventory pages preserve provider order: ESPN roster rate, Yahoo overall rank, Sleeper trending then rank; Yahoo inventory pages are not globally market-rate sorted. Prefer the canonical fields: every response carries leagueId, seasonYear, position, count, ordering, capabilities, and ownershipScope; entries carry team (real-life club, null when none) and id (platform player id as a string, when supplied) on every platform, ESPN and Yahoo entries add acquisitionState (\"free_agent\", \"waivers\", or null when the platform cannot determine the subtype), and ESPN waiver rows may also add waiverClearsAt (ISO time). Yahoo waiver rows may instead add waiverDate as a YYYY-MM-DD calendar date with no time or timezone; never turn it into an exact clearance time. Legacy platform fields remain alongside for compatibility on ordinary ranked calls, while inventory pages return compact fields by default. For ESPN football inventory requests asking for scoring or injury details, set include_inventory_details true on every offset page. These are season totals and averages, not weekly projections; an absent injury status means unknown, not healthy. Refer to leagues, teams, and players by name in answers; IDs are for tool calls only and must not be printed. ESPN always marks capabilities.acquisitionState true. Yahoo marks it true only when at least one returned entry has a known state; Yahoo entries still carry acquisitionState null when the flag is false. ownershipScope \"platform_global\" means percentOwned/percentStarted cover all leagues on that platform — never ownership within the selected league. An ESPN-wide started rate is never conditional on the player being rostered. Label every reported percentage as an ESPN-wide roster/start rate or Yahoo-wide market rate. Translate ownership scope silently into that provider-wide wording; never print the ownershipScope key, platform_global enum, or get_free_agents tool name. If capabilities marks rates unavailable, write \"[Provider] market ownership rate: not provided\"; do not print a missing response field name or null value, call get_players, or offer a lookup. When acquisitionState is null or not present, call rows \"available players,\" never specifically free agents or waivers, and do not promise an immediate add. A returned player is already confirmed available in that league. acquisitionState is the provider-reported subtype, not a guarantee that a specific roster move is legal; do not promise an immediate add from it alone. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. Use get_roster only when the current request separately asks who owns a player; never offer it after an available-player result. Do not include injuryStatus or any injury detail unless the user asks for it; when asked, verify current web evidence and translate provider codes into plain language. State acquisition status in plain language from acquisitionState (\"a free agent\", \"on waivers\"); never print raw codes — neither provider codes such as FREEAGENT or WAIVERS nor canonical values like free_agent verbatim. Use current web evidence before adding analysis or pickup recommendations. Use established session context (call get_user_session only if needed), then get_league_info for the selected league if this chat has not already loaded it; fan out once per league for comparisons. Requires authentication on ESPN/Yahoo; Sleeper uses the public API. On Yahoo ordinary ranked calls (inventory pages carry no stats), entries add a stats line named by the league's own categories: season to date by default, or for baseball, basketball and hockey stats_window 'date' with stats_date YYYY-MM-DD, or for football stats_window 'week' with stats_week. Points leagues also add fantasyPoints and, for the season window, fantasyPointsPerGame. statsCoverage names the window. When Yahoo does not return stats, limitations.playerStatsAvailable is false and entries have no stats; missing stats means unknown, not zero. rank_window 'last_week' (not football) or 'last_month' picks and orders Yahoo players by Yahoo actual rank (from stats) over that window instead of the market-rate order, and cannot be combined with offset; the stat line still follows stats_window (season by default), so never present it as the ranking window's stats. Read-only. Hard stop: after satisfying a returned-list or field-explanation request, end the answer immediately after the requested facts. Remove every closing question or offer to do more work, including roster checks, lineup-fit checks, comparisons, rankings, recommendations, role or health analysis, trends, or outlooks; never append \"if you want\", \"tell me which player\", or a similar invitation unless the user's current request explicitly asks for that additional work.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -890,6 +890,32 @@
         "include_inventory_details": {
           "description": "ESPN football inventory pages (explicit offset) only: include league-scored actual season points and points per game, projected season points (not weekly projections), and recognized injury status. Ignored elsewhere; ordinary ranked ESPN lists already carry these fields. Missing injury status means unknown, not healthy.",
           "type": "boolean"
+        },
+        "stats_window": {
+          "description": "Yahoo ordinary ranked calls only: window for each player's stats. 'season' (season to date, the default), 'date' (baseball, basketball, hockey; use with stats_date), or 'week' (football only; requires stats_week). 'date' and 'week' cannot be combined with offset, since inventory pages carry no stats. Other platforms accept only 'season'.",
+          "type": "string",
+          "enum": [
+            "season",
+            "date",
+            "week"
+          ]
+        },
+        "stats_date": {
+          "description": "Yahoo baseball, basketball and hockey only, with stats_window 'date': the calendar day for each player's stats, YYYY-MM-DD. Default: today in US Eastern time.",
+          "type": "string"
+        },
+        "stats_week": {
+          "description": "Yahoo football only, required with stats_window 'week': the NFL week for each player's stats (a whole number from 1 to 30).",
+          "type": "number"
+        },
+        "rank_window": {
+          "description": "Yahoo ordinary ranked calls only: which players to rank. 'season' (default) is the usual market-rate order. 'last_week' (baseball, basketball, hockey) or 'last_month' picks and orders players by Yahoo actual rank (from stats) over that window. Cannot be combined with offset. It does not change the stat line, which follows stats_window.",
+          "type": "string",
+          "enum": [
+            "season",
+            "last_week",
+            "last_month"
+          ]
         }
       },
       "required": [
@@ -950,10 +976,11 @@
               "enum": [
                 "platform_rostered_rate_desc",
                 "platform_overall_rank",
+                "platform_actual_rank",
                 "alphabetical",
                 "platform_trending_then_rank"
               ],
-              "description": "List ranking: \"platform_rostered_rate_desc\" (ESPN provider-side with draft-rank tiebreak; ordinary Yahoo calls re-rank by market rate only the players fetched, Yahoo's best available by overall rank, fetched in pages of 25 until count is covered (rankingPool.scannedPlayers is the pool size and count the number returned), nulls last, name/id tiebreak; when rankingPool.complete is false, lower-ranked but widely owned players, in football often kickers and defenses, can be missing, and a position filter or a larger count widens the check), \"platform_overall_rank\" (Yahoo inventory pages: upstream overall rank, retained for offset continuity), \"platform_trending_then_rank\" (Sleeper: players most added across Sleeper in the last 24 hours first, then Sleeper's search rank, name/id tiebreak), or \"alphabetical\" (retained for compatibility; not currently emitted)"
+              "description": "List ranking: \"platform_rostered_rate_desc\" (ESPN provider-side with draft-rank tiebreak; ordinary Yahoo calls re-rank by market rate only the players fetched, Yahoo's best available by overall rank, fetched in pages of 25 until count is covered (rankingPool.scannedPlayers is the pool size and count the number returned), nulls last, name/id tiebreak; when rankingPool.complete is false, lower-ranked but widely owned players, in football often kickers and defenses, can be missing, and a position filter or a larger count widens the check), \"platform_overall_rank\" (Yahoo inventory pages: upstream overall rank, retained for offset continuity), \"platform_actual_rank\" (Yahoo ordinary calls with rank_window last_week or last_month: Yahoo's actual rank from stats over that window, with no market-rate re-sort, named by rankingPool.basis), \"platform_trending_then_rank\" (Sleeper: players most added across Sleeper in the last 24 hours first, then Sleeper's search rank, name/id tiebreak), or \"alphabetical\" (retained for compatibility; not currently emitted)"
             },
             "capabilities": {
               "type": "object",
@@ -1102,6 +1129,27 @@
                     "description": "Sleeper only: the injured body part (e.g. Knee), present only alongside injuryStatus",
                     "type": "string"
                   },
+                  "stats": {
+                    "description": "The player's stat line. ESPN: season stats keyed by ESPN's stat names, on rosters and ordinary free-agent lists. Yahoo: the stat line for statsCoverage.window, keyed by the league's own category names (STAT_<id> when Yahoo's names were unavailable; see warning), with numbers where Yahoo sends a number and a string where it sends a ratio or time such as \"11/40\". Absent means the provider returned no stats for this player: unknown, not zero",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    }
+                  },
+                  "fantasyPoints": {
+                    "description": "Yahoo points leagues only: the player's fantasy points for statsCoverage.window, as Yahoo computed them under the league scoring. Absent in categories leagues and when Yahoo returned none; on a Yahoo football roster read with the default week window it is also absent because the roster's points field carries it",
+                    "type": "number"
+                  },
+                  "fantasyPointsPerGame": {
+                    "description": "Yahoo points leagues, season window only: fantasyPoints divided by the stat line's games played (GP), rounded to 2 decimals. Absent when games played is missing or 0",
+                    "type": "number"
+                  },
                   "eligiblePositions": {
                     "description": "Positions the player is eligible at. ESPN: lineup-slot labels, which can include flex labels such as UTIL, and an empty array when ESPN lists no usable slot. Sleeper: its fantasy positions, such as [\"RB\", \"WR\"], omitted when Sleeper sends none",
                     "type": "array",
@@ -1237,6 +1285,27 @@
                     "description": "Sleeper only: the injured body part (e.g. Knee), present only alongside injuryStatus",
                     "type": "string"
                   },
+                  "stats": {
+                    "description": "The player's stat line. ESPN: season stats keyed by ESPN's stat names, on rosters and ordinary free-agent lists. Yahoo: the stat line for statsCoverage.window, keyed by the league's own category names (STAT_<id> when Yahoo's names were unavailable; see warning), with numbers where Yahoo sends a number and a string where it sends a ratio or time such as \"11/40\". Absent means the provider returned no stats for this player: unknown, not zero",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    }
+                  },
+                  "fantasyPoints": {
+                    "description": "Yahoo points leagues only: the player's fantasy points for statsCoverage.window, as Yahoo computed them under the league scoring. Absent in categories leagues and when Yahoo returned none; on a Yahoo football roster read with the default week window it is also absent because the roster's points field carries it",
+                    "type": "number"
+                  },
+                  "fantasyPointsPerGame": {
+                    "description": "Yahoo points leagues, season window only: fantasyPoints divided by the stat line's games played (GP), rounded to 2 decimals. Absent when games played is missing or 0",
+                    "type": "number"
+                  },
                   "eligiblePositions": {
                     "description": "Positions the player is eligible at. ESPN: lineup-slot labels, which can include flex labels such as UTIL, and an empty array when ESPN lists no usable slot. Sleeper: its fantasy positions, such as [\"RB\", \"WR\"], omitted when Sleeper sends none",
                     "type": "array",
@@ -1289,7 +1358,7 @@
               "additionalProperties": {}
             },
             "rankingPool": {
-              "description": "Yahoo ranked calls only: the players the market-rate order covers, scannedPlayers fetched by Yahoo overall rank in pages of 25 (basis yahoo_overall_rank), so it can exceed count; complete is true only when Yahoo signaled its list ended inside them",
+              "description": "Yahoo ranked calls only: the players the market-rate order covers, scannedPlayers fetched by Yahoo overall rank in pages of 25 (basis yahoo_overall_rank), so it can exceed count; complete is true only when Yahoo signaled its list ended inside them. With rank_window last_week or last_month the basis is yahoo_actual_rank_last_week or yahoo_actual_rank_last_month and the list keeps Yahoo's actual-rank order for that window instead of the market-rate order",
               "type": "object",
               "properties": {
                 "basis": {
@@ -1307,6 +1376,46 @@
                 "scannedPlayers",
                 "complete"
               ],
+              "additionalProperties": {}
+            },
+            "statsCoverage": {
+              "description": "Yahoo only: the window the per-player stats cover (season to date, one date, or one football week) and the scope of the stat names (league_categories). Present only when at least one entry has stats",
+              "type": "object",
+              "properties": {
+                "window": {
+                  "type": "string",
+                  "enum": [
+                    "season",
+                    "date",
+                    "week"
+                  ]
+                },
+                "season": {
+                  "type": "number"
+                },
+                "date": {
+                  "type": "string"
+                },
+                "week": {
+                  "type": "number"
+                },
+                "scope": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "window"
+              ],
+              "additionalProperties": {}
+            },
+            "limitations": {
+              "type": "object",
+              "properties": {
+                "playerStatsAvailable": {
+                  "description": "Yahoo only: false when Yahoo did not return usable per-player stats for some or all entries; those entries have no stats (unknown, not zero)",
+                  "type": "boolean"
+                }
+              },
               "additionalProperties": {}
             },
             "warning": {
@@ -2065,7 +2174,7 @@
   {
     "name": "get_players",
     "title": "Search Players",
-    "description": "Search for player identity by name. Always returns identity fields, but ownership context varies by platform. ESPN and Yahoo return market/global ownership and can also populate league ownership fields when credentials and league context are available. ESPN football also adds seasonPoints and pointsPerGame when a selected league is available: these are ESPN's actual-season applied values under that league's scoring, never a Flaim calculation. A real 0 is retained. Null means league scoring was unavailable or ESPN did not return an applied value; for unrostered results it can also mean the player was outside ESPN's bounded 100-player availability pool, so use get_free_agents before treating a null as a scoring fact. Sleeper always evaluates league ownership against every current roster in the selected league, except during an active draft, when this tool returns an error instead of an answer, since draft picks aren't yet reflected on rosters; if the league, rosters, or users can't be loaded for another reason, the call still succeeds with every league_* field null plus a SLEEPER_OWNERSHIP_UNAVAILABLE warning. Sleeper adds a Sleeper-only league_team_id (the Sleeper roster id, or null); its market/global ownership stays unavailable regardless (ownership_scope=\"unavailable\", market_percent_owned=null) — league_team_id is league ownership, not market data. For a selected active league, use established session context (call get_user_session only if needed), then get_league_info, if this chat has not already loaded it for that league, so league-specific ownership and team names can be resolved. League ownership fields: league_status (\"ROSTERED\" = on a team, \"FREE_AGENT\" = unrostered in this league, null = ownership could not be resolved, for example because credentials or rosters were unavailable, the player result carried no usable id, or Sleeper rostering was ambiguous), league_team_name (fantasy team name if rostered), league_owner_name (team owner if rostered). FREE_AGENT is an ownership fact from a roster scan, not an acquisition guarantee — it says nothing about waiver state, so never turn it into pickup advice; get_free_agents is what reports players available to acquire. Trust a non-null league_status directly — null team/owner fields alongside FREE_AGENT are expected, not a signal to verify. Fall back to get_roster only when league_status itself is absent or null. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. Use values from get_user_session. Read-only.",
+    "description": "Search for player identity by name. Always returns identity fields, but ownership context varies by platform. ESPN and Yahoo return market/global ownership and can also populate league ownership fields when credentials and league context are available. ESPN football also adds seasonPoints and pointsPerGame when a selected league is available: these are ESPN's actual-season applied values under that league's scoring, never a Flaim calculation. A real 0 is retained. Null means league scoring was unavailable or ESPN did not return an applied value; for unrostered results it can also mean the player was outside ESPN's bounded 100-player availability pool, so use get_free_agents before treating a null as a scoring fact. Sleeper always evaluates league ownership against every current roster in the selected league, except during an active draft, when this tool returns an error instead of an answer, since draft picks aren't yet reflected on rosters; if the league, rosters, or users can't be loaded for another reason, the call still succeeds with every league_* field null plus a SLEEPER_OWNERSHIP_UNAVAILABLE warning. Sleeper adds a Sleeper-only league_team_id (the Sleeper roster id, or null); its market/global ownership stays unavailable regardless (ownership_scope=\"unavailable\", market_percent_owned=null) — league_team_id is league ownership, not market data. For a selected active league, use established session context (call get_user_session only if needed), then get_league_info, if this chat has not already loaded it for that league, so league-specific ownership and team names can be resolved. League ownership fields: league_status (\"ROSTERED\" = on a team, \"FREE_AGENT\" = unrostered in this league, null = ownership could not be resolved, for example because credentials or rosters were unavailable, the player result carried no usable id, or Sleeper rostering was ambiguous), league_team_name (fantasy team name if rostered), league_owner_name (team owner if rostered). FREE_AGENT is an ownership fact from a roster scan, not an acquisition guarantee — it says nothing about waiver state, so never turn it into pickup advice; get_free_agents is what reports players available to acquire. Trust a non-null league_status directly — null team/owner fields alongside FREE_AGENT are expected, not a signal to verify. Fall back to get_roster only when league_status itself is absent or null. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. Yahoo results add a stats line named by the league's own categories (season to date by default; stats_window 'date' with stats_date YYYY-MM-DD for baseball, basketball and hockey, or 'week' with stats_week for football), fantasyPoints in points leagues, fantasyPointsPerGame for the season window, and statsCoverage naming the window. When Yahoo does not return stats, limitations.playerStatsAvailable is false and entries have no stats; missing stats means unknown, not zero. Use values from get_user_session. Read-only.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -2108,6 +2217,23 @@
         },
         "count": {
           "description": "Maximum number of players to return (default: 10, max: 25)",
+          "type": "number"
+        },
+        "stats_window": {
+          "description": "Yahoo only: window for each player's stats. 'season' (season to date, the default), 'date' (baseball, basketball, hockey; use with stats_date), or 'week' (football only; requires stats_week). Other platforms accept only 'season'.",
+          "type": "string",
+          "enum": [
+            "season",
+            "date",
+            "week"
+          ]
+        },
+        "stats_date": {
+          "description": "Yahoo baseball, basketball and hockey only, with stats_window 'date': the calendar day for each player's stats, YYYY-MM-DD. Default: today in US Eastern time.",
+          "type": "string"
+        },
+        "stats_week": {
+          "description": "Yahoo football only, required with stats_window 'week': the NFL week for each player's stats (a whole number from 1 to 30).",
           "type": "number"
         }
       },
@@ -2255,10 +2381,71 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "stats": {
+                    "description": "The player's stat line. ESPN: season stats keyed by ESPN's stat names, on rosters and ordinary free-agent lists. Yahoo: the stat line for statsCoverage.window, keyed by the league's own category names (STAT_<id> when Yahoo's names were unavailable; see warning), with numbers where Yahoo sends a number and a string where it sends a ratio or time such as \"11/40\". Absent means the provider returned no stats for this player: unknown, not zero",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    }
+                  },
+                  "fantasyPoints": {
+                    "description": "Yahoo points leagues only: the player's fantasy points for statsCoverage.window, as Yahoo computed them under the league scoring. Absent in categories leagues and when Yahoo returned none; on a Yahoo football roster read with the default week window it is also absent because the roster's points field carries it",
+                    "type": "number"
+                  },
+                  "fantasyPointsPerGame": {
+                    "description": "Yahoo points leagues, season window only: fantasyPoints divided by the stat line's games played (GP), rounded to 2 decimals. Absent when games played is missing or 0",
+                    "type": "number"
                   }
                 },
                 "additionalProperties": {}
               }
+            },
+            "statsCoverage": {
+              "description": "Yahoo only: the window the per-player stats cover (season to date, one date, or one football week) and the scope of the stat names (league_categories). Present only when at least one entry has stats",
+              "type": "object",
+              "properties": {
+                "window": {
+                  "type": "string",
+                  "enum": [
+                    "season",
+                    "date",
+                    "week"
+                  ]
+                },
+                "season": {
+                  "type": "number"
+                },
+                "date": {
+                  "type": "string"
+                },
+                "week": {
+                  "type": "number"
+                },
+                "scope": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "window"
+              ],
+              "additionalProperties": {}
+            },
+            "limitations": {
+              "type": "object",
+              "properties": {
+                "playerStatsAvailable": {
+                  "description": "Yahoo only: false when Yahoo did not return usable per-player stats for some or all entries; those entries have no stats (unknown, not zero)",
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": {}
             },
             "warning": {
               "type": "string"
@@ -2286,7 +2473,7 @@
   {
     "name": "get_roster",
     "title": "Team Roster",
-    "description": "Get roster details for a specific team, current by default and historical on request. Exact payload varies by platform: ESPN and Yahoo return player entries with lineup/position context, while Sleeper returns starters, bench, reserve, taxi, and record metadata for the selected roster. Keeper fields are additive and platform-dependent; never assume one provider's keeper fields or units exist on another. ESPN adds per-player keeperValue and keeperValueFuture plus one response-level keeperValueUnit of auction_dollars or draft_round, omitted rather than guessed when ESPN's draft type does not determine it; a historical snapshot withholds keeperValueFuture and flags keeperValueFutureAvailable false. Sleeper resolves keepers to player entries on the current roster only, passing the list through as Sleeper sends it; an empty or null list does not show that the league has no keepers. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. On a current Yahoo roster only, entries may also add isUndroppable and isEditable. These are Yahoo player flags, not comprehensive transaction or lineup-lock rules: isEditable does not provide a lock time or guarantee that an add, drop, or lineup move is legal. Current Yahoo entries may also add eligiblePositions from Yahoo metadata, preserving provider-native codes and order without filtering or mapping to another platform's labels. This is separate from the assigned slot and does not prove that a move is legal. Honor codes Yahoo explicitly lists, including flex codes; do not infer additional eligibility. Missing, empty, or malformed eligibility is omitted; an absent eligiblePositions means unknown, not ineligible. Historical Yahoo snapshots omit eligiblePositions and both flags. Historical snapshots: pass week for football (all platforms) and Sleeper basketball (matchup week), or as_of_date (YYYY-MM-DD) for ESPN/Yahoo baseball, basketball, and hockey, never both. An invalid selector returns a corrective error naming the right one, except that a positive whole-number week on ESPN or Yahoo baseball, basketball, or hockey returns the current roster, with snapshot.requested_week and snapshot.note saying the week was ignored. Every response includes a snapshot block identifying what was returned (current vs week vs date); historical responses may add limitation flags (acquisitionMetadataAvailable, reserveAndTaxiClassificationAvailable) when provider history omits those details. A current Sleeper roster sets limitations.playerStatusAvailable false when it could not confirm the league is live this season and so withheld injury designations; a missing injuryStatus then does not mean the player is healthy. For \"roster during matchup week N\" questions in daily sports, ask the user for a specific date rather than guessing. One matchup spans several daily rosters. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so the model already knows the league's team names, owner/team mapping, league settings, and roster context before interpreting this roster. Requires authentication except on Sleeper's public API. Read-only.",
+    "description": "Get roster details for a specific team, current by default and historical on request. Exact payload varies by platform: ESPN and Yahoo return player entries with lineup/position context, while Sleeper returns starters, bench, reserve, taxi, and record metadata for the selected roster. Keeper fields are additive and platform-dependent; never assume one provider's keeper fields or units exist on another. ESPN adds per-player keeperValue and keeperValueFuture plus one response-level keeperValueUnit of auction_dollars or draft_round, omitted rather than guessed when ESPN's draft type does not determine it; a historical snapshot withholds keeperValueFuture and flags keeperValueFutureAvailable false. Sleeper resolves keepers to player entries on the current roster only, passing the list through as Sleeper sends it; an empty or null list does not show that the league has no keepers. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. On a current Yahoo roster only, entries may also add isUndroppable and isEditable. These are Yahoo player flags, not comprehensive transaction or lineup-lock rules: isEditable does not provide a lock time or guarantee that an add, drop, or lineup move is legal. Current Yahoo entries may also add eligiblePositions from Yahoo metadata, preserving provider-native codes and order without filtering or mapping to another platform's labels. This is separate from the assigned slot and does not prove that a move is legal. Honor codes Yahoo explicitly lists, including flex codes; do not infer additional eligibility. Missing, empty, or malformed eligibility is omitted; an absent eligiblePositions means unknown, not ineligible. Historical Yahoo snapshots omit eligiblePositions and both flags. Historical snapshots: pass week for football (all platforms) and Sleeper basketball (matchup week), or as_of_date (YYYY-MM-DD) for ESPN/Yahoo baseball, basketball, and hockey, never both. An invalid selector returns a corrective error naming the right one, except that a positive whole-number week on ESPN or Yahoo baseball, basketball, or hockey returns the current roster, with snapshot.requested_week and snapshot.note saying the week was ignored. Every response includes a snapshot block identifying what was returned (current vs week vs date); historical responses may add limitation flags (acquisitionMetadataAvailable, reserveAndTaxiClassificationAvailable) when provider history omits those details. A current Sleeper roster sets limitations.playerStatusAvailable false when it could not confirm the league is live this season and so withheld injury designations; a missing injuryStatus then does not mean the player is healthy. Yahoo baseball, basketball and hockey entries add stats named by the league's own categories (season to date by default; stats_window 'date' with stats_date YYYY-MM-DD gives one day, default today in US Eastern time), plus fantasyPoints in points leagues and, for the season window, fantasyPointsPerGame. Yahoo football entries keep their weekly points and add that week's stats, or season stats with stats_window 'season'. Season stats are season to date even on a historical as_of_date roster. statsCoverage names the window returned. When Yahoo does not return stats, limitations.playerStatsAvailable is false and entries have no stats; missing stats means unknown, not zero. ESPN and Sleeper are unchanged, and a stats_window other than 'season' is Yahoo-only. For \"roster during matchup week N\" questions in daily sports, ask the user for a specific date rather than guessing. One matchup spans several daily rosters. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so the model already knows the league's team names, owner/team mapping, league settings, and roster context before interpreting this roster. Requires authentication except on Sleeper's public API. Read-only.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -2328,6 +2515,19 @@
         },
         "as_of_date": {
           "description": "Historical calendar-day roster snapshot in YYYY-MM-DD format. ESPN and Yahoo baseball, basketball, and hockey only — football and Sleeper use week. Omit for the current roster; pass at most one of week or as_of_date.",
+          "type": "string"
+        },
+        "stats_window": {
+          "description": "Yahoo only: window for each player's stats. 'season' (season to date), 'date' (baseball, basketball, hockey; use with stats_date), or 'week' (football only; the stat week is the roster week, so pass week instead of stats_week). Default: season, except football, where the default is the roster's weekly stats. Other platforms accept only 'season'.",
+          "type": "string",
+          "enum": [
+            "season",
+            "date",
+            "week"
+          ]
+        },
+        "stats_date": {
+          "description": "Yahoo baseball, basketball and hockey only, with stats_window 'date': the calendar day for each player's stats, YYYY-MM-DD. Default: today in US Eastern time.",
           "type": "string"
         }
       },
@@ -2442,6 +2642,27 @@
                   "isEditable": {
                     "description": "Yahoo current-roster player flag for whether Yahoo reports the player as editable. It is not a lock time and does not guarantee a particular add, drop, or lineup move is legal",
                     "type": "boolean"
+                  },
+                  "stats": {
+                    "description": "The player's stat line. ESPN: season stats keyed by ESPN's stat names, on rosters and ordinary free-agent lists. Yahoo: the stat line for statsCoverage.window, keyed by the league's own category names (STAT_<id> when Yahoo's names were unavailable; see warning), with numbers where Yahoo sends a number and a string where it sends a ratio or time such as \"11/40\". Absent means the provider returned no stats for this player: unknown, not zero",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    }
+                  },
+                  "fantasyPoints": {
+                    "description": "Yahoo points leagues only: the player's fantasy points for statsCoverage.window, as Yahoo computed them under the league scoring. Absent in categories leagues and when Yahoo returned none; on a Yahoo football roster read with the default week window it is also absent because the roster's points field carries it",
+                    "type": "number"
+                  },
+                  "fantasyPointsPerGame": {
+                    "description": "Yahoo points leagues, season window only: fantasyPoints divided by the stat line's games played (GP), rounded to 2 decimals. Absent when games played is missing or 0",
+                    "type": "number"
                   }
                 },
                 "additionalProperties": {}
@@ -2490,10 +2711,49 @@
                 "additionalProperties": {}
               }
             },
+            "statsCoverage": {
+              "description": "Yahoo only: the window the per-player stats cover (season to date, one date, or one football week) and the scope of the stat names (league_categories). Present only when at least one entry has stats",
+              "type": "object",
+              "properties": {
+                "window": {
+                  "type": "string",
+                  "enum": [
+                    "season",
+                    "date",
+                    "week"
+                  ]
+                },
+                "season": {
+                  "type": "number"
+                },
+                "date": {
+                  "type": "string"
+                },
+                "week": {
+                  "type": "number"
+                },
+                "scope": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "window"
+              ],
+              "additionalProperties": {}
+            },
             "limitations": {
               "type": "object",
-              "properties": {},
+              "properties": {
+                "playerStatsAvailable": {
+                  "description": "Yahoo only: false when Yahoo did not return usable per-player stats for some or all entries; those entries have no stats (unknown, not zero)",
+                  "type": "boolean"
+                }
+              },
               "additionalProperties": {}
+            },
+            "warning": {
+              "description": "Yahoo only: plain-language notes, for example when player stats or stat names were unavailable",
+              "type": "string"
             }
           },
           "additionalProperties": {},
