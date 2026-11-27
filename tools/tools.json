@@ -544,7 +544,7 @@
               }
             },
             "teams": {
-              "description": "Team names keyed by provider team ID",
+              "description": "Team names keyed by provider team ID. A Sleeper team with no manager reads \"Unowned team (roster N)\" and has no teamOwners entry",
               "type": "object",
               "propertyNames": {
                 "type": "string"
@@ -1453,7 +1453,7 @@
   {
     "name": "get_league_info",
     "title": "League Context",
-    "description": "With session context established, call this once per league the first time this chat works with that league, before the requested standings, matchup, roster, free-agent, player, transaction, or draft tool, then reuse it for later questions about that league. A usable successful get_user_session result from earlier in this chat satisfies that prerequisite; do not repeat it just to satisfy this ordering. Skip it only when answering from session data alone or branching to get_ancient_history. This provides the baseline league context for analysis: league name, settings, scoring type, roster configuration, and team/owner context, plus schedule or season-window metadata when the platform provides it. Keeper and draft-format fields are additive and platform-dependent; never assume one provider's fields exist on another. ESPN adds keeperSettings (keeperCount, keeperCountFuture, keeperOrderType, keeperDeadlineDate) and isKeeperLeague when ESPN reports a keeper count, plus per-team keeperPlayerIds and futureKeeperPlayerIds as raw ESPN player IDs with no name resolution. Sleeper adds leagueFormat, whose typeRaw is an undocumented Sleeper convention that must not be read on its own as a redraft, keeper, dynasty, or guillotine signal, plus per-team keepers as raw Sleeper player IDs. When its settings request succeeds, Yahoo may add draftType, isAuctionDraft, canTradeDraftPicks, waiverType, waiverRule, waiverTime (days), postDraftPlayers, cantCutList, and maxWeeklyAdds; it also adds weeklyDeadline from league metadata. Yahoo statModifiers returns configured per-stat scoring values and may add bonuses as Yahoo's configured target/points rule pairs. These are league rules, not calculated player awards; do not infer whether a target is inclusive or whether multiple tiers stack. Yahoo's rule and deadline codes are raw provider values with no complete published code list: do not decode them, call weeklyDeadline a lock time, or infer that a particular move is legal. The settings fields are omitted, with a warning, when Yahoo's settings request fails. Yahoo exposes no keeper-cost rule. Sleeper futureDraftRounds describes the configured round count for future drafts; use get_draft.draft.rounds for the selected draft's actual round count. When fanning out across multiple leagues, call this once per league. The exact team fields vary by platform but all include ownerName. Use values from get_user_session. Read-only.",
+    "description": "With session context established, call this once per league the first time this chat works with that league, before the requested standings, matchup, roster, free-agent, player, transaction, or draft tool, then reuse it for later questions about that league. A usable successful get_user_session result from earlier in this chat satisfies that prerequisite; do not repeat it just to satisfy this ordering. Skip it only when answering from session data alone or branching to get_ancient_history. This provides the baseline league context for analysis: league name, settings, scoring type, roster configuration, and team/owner context, plus schedule or season-window metadata when the platform provides it. Keeper and draft-format fields are additive and platform-dependent; never assume one provider's fields exist on another. ESPN adds keeperSettings (keeperCount, keeperCountFuture, keeperOrderType, keeperDeadlineDate) and isKeeperLeague when ESPN reports a keeper count, plus per-team keeperPlayerIds and futureKeeperPlayerIds as raw ESPN player IDs with no name resolution. Sleeper adds leagueFormat, whose typeRaw is an undocumented Sleeper convention that must not be read on its own as a redraft, keeper, dynasty, or guillotine signal, plus per-team keepers as raw Sleeper player IDs. Sleeper per-team eliminatedInWeek and the elimination block follow the same rules as in get_standings. When its settings request succeeds, Yahoo may add draftType, isAuctionDraft, canTradeDraftPicks, waiverType, waiverRule, waiverTime (days), postDraftPlayers, cantCutList, and maxWeeklyAdds; it also adds weeklyDeadline from league metadata. Yahoo statModifiers returns configured per-stat scoring values and may add bonuses as Yahoo's configured target/points rule pairs. These are league rules, not calculated player awards; do not infer whether a target is inclusive or whether multiple tiers stack. Yahoo's rule and deadline codes are raw provider values with no complete published code list: do not decode them, call weeklyDeadline a lock time, or infer that a particular move is legal. The settings fields are omitted, with a warning, when Yahoo's settings request fails. Yahoo exposes no keeper-cost rule. Sleeper futureDraftRounds describes the configured round count for future drafts; use get_draft.draft.rounds for the selected draft's actual round count. When fanning out across multiple leagues, call this once per league. The exact team fields vary by platform. ownerName is null or absent when the platform does not name the manager; a Sleeper team with no manager has ownerName null, unowned: true, and teamName \"Unowned team (roster N)\", as in its standings, rosters, matchups, the transaction and draft teams maps, and players' league_team_name. Use values from get_user_session. Read-only.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -1728,12 +1728,30 @@
                 "null"
               ]
             },
+            "elimination": {
+              "description": "Sleeper elimination (guillotine) leagues only: present when Sleeper marks a team eliminated, no team has a head-to-head record, and the league is Sleeper type 3 or reports a last elimination week. lastEliminationWeek is the last week a team was eliminated, when Sleeper reports it",
+              "type": "object",
+              "properties": {
+                "lastEliminationWeek": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "note"
+              ],
+              "additionalProperties": {}
+            },
             "name": {
               "type": "string"
             },
             "status": {},
             "teams": {
-              "description": "Team/owner context; exact team fields vary by platform but all include ownerName",
+              "description": "Team/owner context; exact team fields vary by platform. ownerName is null or absent when the platform does not name the manager",
               "type": "array",
               "items": {
                 "type": "object",
@@ -1742,6 +1760,24 @@
                     "type": [
                       "string",
                       "null"
+                    ]
+                  },
+                  "unowned": {
+                    "description": "Sleeper only: the team has no manager. ownerName is then null and teamName is Flaim's label \"Unowned team (roster N)\", not a name set in Sleeper",
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "eliminatedInWeek": {
+                    "description": "Sleeper only: the week Sleeper marks this team eliminated, or null when it marks none. Present on every team once Sleeper marks any team eliminated; absent otherwise",
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   }
                 },
@@ -1921,6 +1957,11 @@
                       {
                         "type": "object",
                         "properties": {
+                          "unowned": {
+                            "description": "Sleeper only: the team has no manager. ownerName is then null and teamName is Flaim's label \"Unowned team (roster N)\", not a name set in Sleeper",
+                            "type": "boolean",
+                            "const": true
+                          },
                           "players": {
                             "type": "array",
                             "items": {
@@ -2013,6 +2054,11 @@
                       {
                         "type": "object",
                         "properties": {
+                          "unowned": {
+                            "description": "Sleeper only: the team has no manager. ownerName is then null and teamName is Flaim's label \"Unowned team (roster N)\", not a name set in Sleeper",
+                            "type": "boolean",
+                            "const": true
+                          },
                           "players": {
                             "type": "array",
                             "items": {
@@ -2174,7 +2220,7 @@
   {
     "name": "get_players",
     "title": "Search Players",
-    "description": "Search for player identity by name. Always returns identity fields, but ownership context varies by platform. ESPN and Yahoo return market/global ownership and can also populate league ownership fields when credentials and league context are available. ESPN football also adds seasonPoints and pointsPerGame when a selected league is available: these are ESPN's actual-season applied values under that league's scoring, never a Flaim calculation. A real 0 is retained. Null means league scoring was unavailable or ESPN did not return an applied value; for unrostered results it can also mean the player was outside ESPN's bounded 100-player availability pool, so use get_free_agents before treating a null as a scoring fact. Sleeper always evaluates league ownership against every current roster in the selected league, except during an active draft, when this tool returns an error instead of an answer, since draft picks aren't yet reflected on rosters; if the league, rosters, or users can't be loaded for another reason, the call still succeeds with every league_* field null plus a SLEEPER_OWNERSHIP_UNAVAILABLE warning. Sleeper adds a Sleeper-only league_team_id (the Sleeper roster id, or null); its market/global ownership stays unavailable regardless (ownership_scope=\"unavailable\", market_percent_owned=null) — league_team_id is league ownership, not market data. For a selected active league, use established session context (call get_user_session only if needed), then get_league_info, if this chat has not already loaded it for that league, so league-specific ownership and team names can be resolved. League ownership fields: league_status (\"ROSTERED\" = on a team, \"FREE_AGENT\" = unrostered in this league, null = ownership could not be resolved, for example because credentials or rosters were unavailable, the player result carried no usable id, or Sleeper rostering was ambiguous), league_team_name (fantasy team name if rostered), league_owner_name (team owner if rostered). FREE_AGENT is an ownership fact from a roster scan, not an acquisition guarantee — it says nothing about waiver state, so never turn it into pickup advice; get_free_agents is what reports players available to acquire. Trust a non-null league_status directly — null team/owner fields alongside FREE_AGENT are expected, not a signal to verify. Fall back to get_roster only when league_status itself is absent or null. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. Yahoo results add a stats line named by the league's own categories (season to date by default; stats_window 'date' with stats_date YYYY-MM-DD for baseball, basketball and hockey, or 'week' with stats_week for football), fantasyPoints in points leagues, fantasyPointsPerGame for the season window, and statsCoverage naming the window. When Yahoo does not return stats, limitations.playerStatsAvailable is false and entries have no stats; missing stats means unknown, not zero. Use values from get_user_session. Read-only.",
+    "description": "Search for player identity by name. Always returns identity fields, but ownership context varies by platform. ESPN and Yahoo return market/global ownership and can also populate league ownership fields when credentials and league context are available. ESPN football also adds seasonPoints and pointsPerGame when a selected league is available: these are ESPN's actual-season applied values under that league's scoring, never a Flaim calculation. A real 0 is retained. Null means league scoring was unavailable or ESPN did not return an applied value; for unrostered results it can also mean the player was outside ESPN's bounded 100-player availability pool, so use get_free_agents before treating a null as a scoring fact. Sleeper always evaluates league ownership against every current roster in the selected league, except during an active draft, when this tool returns an error instead of an answer, since draft picks aren't yet reflected on rosters; if the league, rosters, or users can't be loaded for another reason, the call still succeeds with every league_* field null plus a SLEEPER_OWNERSHIP_UNAVAILABLE warning. Sleeper adds a Sleeper-only league_team_id (the Sleeper roster id, or null); its market/global ownership stays unavailable regardless (ownership_scope=\"unavailable\", market_percent_owned=null) — league_team_id is league ownership, not market data. For a selected active league, use established session context (call get_user_session only if needed), then get_league_info, if this chat has not already loaded it for that league, so league-specific ownership and team names can be resolved. League ownership fields: league_status (\"ROSTERED\" = on a team, \"FREE_AGENT\" = unrostered in this league, null = ownership could not be resolved, for example because credentials or rosters were unavailable, the player result carried no usable id, or Sleeper rostering was ambiguous), league_team_name (fantasy team name if rostered), league_owner_name (team owner if rostered; a Sleeper team with no manager has league_team_name \"Unowned team (roster N)\" and league_owner_name null). FREE_AGENT is an ownership fact from a roster scan, not an acquisition guarantee — it says nothing about waiver state, so never turn it into pickup advice; get_free_agents is what reports players available to acquire. Trust a non-null league_status directly — null team/owner fields alongside FREE_AGENT are expected, not a signal to verify. Fall back to get_roster only when league_status itself is absent or null. Yahoo entries may add isKeeper as status, cost, and kept when Yahoo sends it; Yahoo has only been observed returning cost as false, so no numeric keeper cost is available from Yahoo. Yahoo results add a stats line named by the league's own categories (season to date by default; stats_window 'date' with stats_date YYYY-MM-DD for baseball, basketball and hockey, or 'week' with stats_week for football), fantasyPoints in points leagues, fantasyPointsPerGame for the season window, and statsCoverage naming the window. When Yahoo does not return stats, limitations.playerStatsAvailable is false and entries have no stats; missing stats means unknown, not zero. Use values from get_user_session. Read-only.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -2600,6 +2646,11 @@
                 "null"
               ]
             },
+            "unowned": {
+              "description": "Sleeper only: the team has no manager. ownerName is then null and teamName is Flaim's label \"Unowned team (roster N)\", not a name set in Sleeper",
+              "type": "boolean",
+              "const": true
+            },
             "snapshot": {
               "description": "Identifies what was returned: current, week, or date",
               "type": "object",
@@ -2707,7 +2758,13 @@
               "type": "array",
               "items": {
                 "type": "object",
-                "properties": {},
+                "properties": {
+                  "unowned": {
+                    "description": "Sleeper only: the team has no manager. ownerName is then null and teamName is Flaim's label \"Unowned team (roster N)\", not a name set in Sleeper",
+                    "type": "boolean",
+                    "const": true
+                  }
+                },
                 "additionalProperties": {}
               }
             },
@@ -2778,7 +2835,7 @@
   {
     "name": "get_standings",
     "title": "League Standings",
-    "description": "Get season standings and outcome snapshot; includes verified season-outcome fields when available. Returns team records, rankings, and points summaries. The rank field is a standings sort position (1 = best): on ESPN it follows ESPN's playoffSeed order when every team has a unique valid seed; otherwise Flaim computes it from win percentage (a tie counts as half a win), with wins as the tie-breaker. On Sleeper it is computed by Flaim from wins, with points for as the tie-breaker; on Yahoo it is passed through from Yahoo's own standings API. It is NOT a verified postseason finish. For verified postseason outcome, use finalRank and championshipWon instead. Also returns seasonPhase (regular_season/playoffs_in_progress/season_complete), seasonComplete, and per-team outcome fields: finalRank, championshipWon, playoffOutcome, outcomeConfidence, madePlayoffs, playoffSeed. Outcome fields are null when not verifiable — do not infer championship from rank or team name. outcomeConfidence is 'explicit' when the platform reports final ranks, or 'derived' when the champion and runner-up were determined from the final winners-bracket matchup (ESPN historical seasons may omit final ranks); 'derived' only ever appears on ESPN — Yahoo always returns null here, and Sleeper returns 'explicit' for any completed season whose winners bracket names a champion, including when the finish came from the bracket rather than from reported placements; a tied championship game is resolved using the league's playoff tie rule (ESPN's default advances the higher seed). Note: playoffOutcome returns 'in_progress' on Sleeper for teams in active playoffs; ESPN and Yahoo return null for that state. ESPN may also include projected-rank fields. Every platform also returns waiverPriority (the team's current waiver-claim priority, 1 = first — this is the live priority, NOT get_transactions' waiver_priority, which is the priority some past claim used), and Yahoo and Sleeper add faabBalance (remaining free-agent budget; 0 means spent out, not unknown; on Sleeper it already reflects FAAB traded between teams, so it can exceed the league's starting budget). Either can be null (not applicable, or not reported by the platform — do not read null as proof the league lacks FAAB) and they are not mutually exclusive: a FAAB league may also report waiverPriority as its tie-breaker for equal bids. ESPN standings omit faabBalance entirely rather than returning null. Yahoo basketball Roto additionally returns each team's roto block: season stat values, Yahoo-reported per-category points, a separate overall totalPoints, and independent statsCoverage/pointsCoverage. These are season totals, not current-week or date scores. Raw ratio and percentage strings retain Yahoo's precision. Null means unknown, never zero; genuine zero and decimal points are preserved. The category rows can include display-only or unscored stats: do not infer the configured scoring categories from row counts, numeric point counts, or isDisplayOnly:false. Missing labels or metadata stay unknown. Category points are not category ranks; no category ranks, neighbor gaps or attainable gains are supplied or guaranteed. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so team names and league context are already established. For multi-league comparisons, call once per league. For historical finish questions, call get_ancient_history first to discover seasons, then call this tool per season for verified outcomes. Read-only.",
+    "description": "Get season standings and outcome snapshot; includes verified season-outcome fields when available. Returns team records, rankings, and points summaries. The rank field is a standings sort position (1 = best): on ESPN it follows ESPN's playoffSeed order when every team has a unique valid seed; otherwise Flaim computes it from win percentage (a tie counts as half a win), with wins as the tie-breaker. On Sleeper it is computed by Flaim from wins, with points for as the tie-breaker (in an elimination league, teams still alive by points for, then eliminated teams by latest elimination week); on Yahoo it is passed through from Yahoo's own standings API. It is NOT a verified postseason finish. For verified postseason outcome, use finalRank and championshipWon instead. Also returns seasonPhase (regular_season/playoffs_in_progress/season_complete), seasonComplete, and per-team outcome fields: finalRank, championshipWon, playoffOutcome, outcomeConfidence, madePlayoffs, playoffSeed. Outcome fields are null when not verifiable — do not infer championship from rank or team name. outcomeConfidence is 'explicit' when the platform reports final ranks, or 'derived' when the champion and runner-up were determined from the final winners-bracket matchup (ESPN historical seasons may omit final ranks); 'derived' only ever appears on ESPN — Yahoo always returns null here, and Sleeper returns 'explicit' for any completed season whose winners bracket names a champion, including when the finish came from the bracket rather than from reported placements; a tied championship game is resolved using the league's playoff tie rule (ESPN's default advances the higher seed). Note: playoffOutcome returns 'in_progress' on Sleeper for teams in active playoffs; ESPN and Yahoo return null for that state. Sleeper adds per-team eliminatedInWeek whenever it marks any team eliminated (null on a team it does not mark). A Sleeper elimination (guillotine) league, recognized only when Sleeper marks a team eliminated, no team has a head-to-head record, and the league is Sleeper type 3 or reports a last elimination week, also adds an elimination block (a note, plus lastEliminationWeek when Sleeper reports it); there wins, losses, ties, and winPercentage are not meaningful, and pointsAgainst is null when Sleeper reports none. A Sleeper team with no manager has ownerName null and unowned: true. ESPN may also include projected-rank fields. Every platform also returns waiverPriority (the team's current waiver-claim priority, 1 = first — this is the live priority, NOT get_transactions' waiver_priority, which is the priority some past claim used), and Yahoo and Sleeper add faabBalance (remaining free-agent budget; 0 means spent out, not unknown; on Sleeper it already reflects FAAB traded between teams, so it can exceed the league's starting budget). Either can be null (not applicable, or not reported by the platform — do not read null as proof the league lacks FAAB) and they are not mutually exclusive: a FAAB league may also report waiverPriority as its tie-breaker for equal bids. ESPN standings omit faabBalance entirely rather than returning null. Yahoo basketball Roto additionally returns each team's roto block: season stat values, Yahoo-reported per-category points, a separate overall totalPoints, and independent statsCoverage/pointsCoverage. These are season totals, not current-week or date scores. Raw ratio and percentage strings retain Yahoo's precision. Null means unknown, never zero; genuine zero and decimal points are preserved. The category rows can include display-only or unscored stats: do not infer the configured scoring categories from row counts, numeric point counts, or isDisplayOnly:false. Missing labels or metadata stay unknown. Category points are not category ranks; no category ranks, neighbor gaps or attainable gains are supplied or guaranteed. Use established session context (call get_user_session only if needed), then get_league_info for the specified league if this chat has not already loaded it, so team names and league context are already established. For multi-league comparisons, call once per league. For historical finish questions, call get_ancient_history first to discover seasons, then call this tool per season for verified outcomes. Read-only.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -2876,6 +2933,24 @@
             },
             "seasonComplete": {
               "type": "boolean"
+            },
+            "elimination": {
+              "description": "Sleeper elimination (guillotine) leagues only: present when Sleeper marks a team eliminated, no team has a head-to-head record, and the league is Sleeper type 3 or reports a last elimination week. lastEliminationWeek is the last week a team was eliminated, when Sleeper reports it",
+              "type": "object",
+              "properties": {
+                "lastEliminationWeek": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "note"
+              ],
+              "additionalProperties": {}
             },
             "standings": {
               "type": "array",
@@ -3062,6 +3137,24 @@
                       "number",
                       "null"
                     ]
+                  },
+                  "eliminatedInWeek": {
+                    "description": "Sleeper only: the week Sleeper marks this team eliminated, or null when it marks none. Present on every team once Sleeper marks any team eliminated; absent otherwise",
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "unowned": {
+                    "description": "Sleeper only: the team has no manager. ownerName is then null and teamName is Flaim's label \"Unowned team (roster N)\", not a name set in Sleeper",
+                    "type": "boolean",
+                    "const": true
                   }
                 },
                 "additionalProperties": {}
@@ -3695,7 +3788,7 @@
               }
             },
             "teams": {
-              "description": "ESPN team ID to display name map",
+              "description": "ESPN and Sleeper team ID to display name map. A Sleeper team with no manager reads \"Unowned team (roster N)\"",
               "type": "object",
               "propertyNames": {
                 "type": "string"
